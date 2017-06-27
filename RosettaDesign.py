@@ -55,7 +55,7 @@ def SASA(pose):
 		lis.append((x[2] , sasa))
 	#Label each amino acid depending on its SASA position according to the parameters highlighted in the paper by (Koga et.al., 2012 - PMID: 23135467). The parameters are as follows:
 	#Surface:	Helix or Sheet: SASA => 60		Loop: SASA => 40
-	#Boundry:	Helix or Sheet: 15 < SASA < 60		Loop: 25 < SASA < 40
+	#Boundery:	Helix or Sheet: 15 < SASA < 60		Loop: 25 < SASA < 40
 	#Core:		Helix or Sheet: SASA =< 15		Loop: SASA =< 25	
 	surface = list()
 	boundery = list()
@@ -118,7 +118,7 @@ def Design_Layer(pose):
 		#1 - Get SASA Layers
 		sasa = SASA(pose)
 		surface = sasa[0]
-		boundry = sasa[1]
+		boundery = sasa[1]
 		core = sasa[2]
 		#2 - Preform RosettaDesign on each layer
 		#Design core
@@ -136,7 +136,7 @@ def Design_Layer(pose):
 		task_pack = standard_packer_task(pose)
 		pack_mover = PackRotamersMover(scorefxn , task_pack)
 		task_pack.temporarily_fix_everything()					#To prevent all amino acids from being designed
-		for AA in boundry:
+		for AA in boundery:
 			boundAA = pose.residue(AA).name()
 			if boundAA == 'CYS:disulfide':
 				continue
