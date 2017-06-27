@@ -1,99 +1,167 @@
-#!/bin/bash
+#!/usr/bin/python3
 
-<<COMMENT
-Description:
-------------
-This is a Bash script that automatically sets the correct files to run Rosetta Abinitio (default for 25,000 decoys) followed by Clustering (lowest 200 scoring decoys) followed by plotting the computation result in a HPC (High Preformace Computer) that uses PBS as its job scheduler.
-This script was written by Sari Sabban on 27-June-2017.
+import numpy , Bio.PDB , os , sys
 
-Required Input Files:
----------------------
-1. aat000_03_05.200_v1_3
-2. aat000_09_05.200_v1_3
-3. structure.pdb
-4. structure.fasta
-5. t000_.psipred_ss2
+from pyrosetta import *
+from pyrosetta.toolbox import *
+from rosetta.protocols.relax import *
+from rosetta.protocols.moves import *
+from rosetta.protocols.simple_moves import *
+from rosetta.core.pack.task import TaskFactory
+init()
 
-How To Use:
------------
-1. Before using this script you must make sure it works in your HPC by running each section individually, job chaining (what this script does) can disrupt the HPC if run incorrectly. There are lines in this script that only works in specific supercomputers and not others.
-2. Find all nessesary paths in this script and change them using this command:
-	sed -i 's^{ROSETTA}^PATH/TO/ROSETTA^g' Abinitio.bash
-3. Make sure you have all the nessesary input files in the working directory.
-4. Execute this script to generate all nessesary files and folders and submit job for computation using this command:
-	bash Abinitio.bash && qsub abinitio.pbs
-6. This script is setup to run using the PBS job scheduler, simple changes can be made to make it work on other job schedulers, but thorough understading of each job scheduler is nessesary to make these modifications.
-7. The default computatio settings are for normal Abinitio computation (25,000 structures). You will have to change the walltime for larger computations (1,000,000):
-	sed -i '/#PBS -l walltime=9:00:00/d' Abinitio.bash && sed -i '/#PBS -l walltime=2:00:00/d' Abinitio.bash && sed -i 's/thin/thin_1m/g' Abinitio.bash
-COMMENT
-#---------------------------------------------------------------------------------------------------------------
-echo '-database {ROSETTA}/main/database
--in:file:frag3 ./aat000_03_05.200_v1_3
--in:file:frag9 ./aat000_09_05.200_v1_3
--in:file:fasta ./structure.fasta
--in:file:native ./structure.pdb
--psipred_ss2 ./t000_.psipred_ss2
--nstruct 1
--abinitio:relax
--use_filters true
--abinitio::increase_cycles 10
--abinitio::rg_reweight 0.5
--abinitio::rsd_wt_helix 0.5
--abinitio::rsd_wt_loop 0.5
--relax::fast
--out:file:silent ./fold_silent_${PBS_ARRAY_INDEX}.out' > flags
+def Relax(pose):
+	''' Relaxes a structure '''
+	''' Updates the original pose with the relaxed pose '''
+	scorefxn = get_fa_scorefxn()
+	relax = ClassicRelax()
+	relax.set_scorefxn(scorefxn)
+	relax.apply(pose)
 
-echo '#!/bin/bash
-#PBS -N Abinitio
-#PBS -q thin
-#PBS -l walltime=9:00:00
-#PBS -l select=1:ncpus=1
-#PBS -j oe
-#PBS -J 1-10
+def SASA(pose):
+	''' Calculates the different layers (Surface, Boundery, Core) of a structure according its SASA (solvent-accessible surface area) '''
+	''' Returns three lists Surface amino acids = [0] , Boundery amino acids = [1] , Core amino acids = [2] '''
+	#Temporary generate a .pdb file of the pose to isolate the layers since it is not yet possible to do that using a Rosetta pose, this temporary .pdb file will be deleted after the layers are found
+	pose.dump_pdb('ToDesign.pdb')
+	#Standard script to setup biopython's DSSP to calculate SASA using Wilke constants
+	p = Bio.PDB.PDBParser()
+	structure = p.get_structure('X' , 'ToDesign.pdb')
+	model = structure[0]
+	dssp = Bio.PDB.DSSP(model , 'ToDesign.pdb' , acc_array='Wilke')
+	#Loop to get SASA for each amino acid
+	lis = list()
+	count = 0
+	for x in dssp:
+		if x[1]=='A' : sasa=129*(x[3])
+		elif x[1]=='V' : sasa=174*(x[3])
+		elif x[1]=='I' : sasa=197*(x[3])
+		elif x[1]=='L' : sasa=201*(x[3])
+		elif x[1]=='M' : sasa=224*(x[3])
+		elif x[1]=='P' : sasa=159*(x[3])
+		elif x[1]=='Y' : sasa=263*(x[3])
+		elif x[1]=='F' : sasa=240*(x[3])
+		elif x[1]=='W' : sasa=285*(x[3])
+		elif x[1]=='R' : sasa=274*(x[3])
+		elif x[1]=='C' : sasa=167*(x[3])
+		elif x[1]=='N' : sasa=195*(x[3])
+		elif x[1]=='Q' : sasa=225*(x[3])
+		elif x[1]=='E' : sasa=223*(x[3])
+		elif x[1]=='G' : sasa=104*(x[3])
+		elif x[1]=='H' : sasa=224*(x[3])
+		elif x[1]=='K' : sasa=236*(x[3])
+		elif x[1]=='S' : sasa=155*(x[3])
+		elif x[1]=='T' : sasa=172*(x[3])
+		elif x[1]=='D' : sasa=193*(x[3])
+		lis.append((x[2] , sasa))
+	#Label each amino acid depending on its SASA position according to the parameters highlighted in the paper by (Koga et.al., 2012 - PMID: 23135467). The parameters are as follows:
+	#Surface:	Helix or Sheet: SASA => 60		Loop: SASA => 40
+	#Boundery:	Helix or Sheet: 15 < SASA < 60		Loop: 25 < SASA < 40
+	#Core:		Helix or Sheet: SASA =< 15		Loop: SASA =< 25	
+	surface = list()
+	boundery = list()
+	core = list()
+	count = 0
+	for x , y in lis:
+		count = count + 1
+		if y <= 25 and (x == '-' or x == 'T' or x == 'S'):			#Loop (DSSP code is - or T or S)
+			core.append(count)
+		elif 25 < y < 40 and (x == '-' or x == 'T' or x == 'S'):		#Loop (DSSP code is - or T or S)
+			boundery.append(count)
+		elif y >= 40 and (x == '-' or x == 'T' or x == 'S'):			#Loop (DSSP code is - or T or S)
+			surface.append(count)
+		elif y <= 15 and (x == 'G' or x == 'H' or x == 'I'):			#Helix (DSSP code is G or H or I)
+			core.append(count)
+		elif 15 < y < 60 and (x == 'G' or x == 'H' or x == 'I'):		#Helix (DSSP code is G or H or I)
+			boundery.append(count)
+		elif y >= 60 and (x == 'G' or x == 'H' or x == 'I'):			#Helix (DSSP code is G or H or I)
+			surface.append(count)
+		elif y <= 15 and (x == 'B' or x == 'E'):				#Sheet (DSSP code is B or E)
+			core.append(count)
+		elif 15 < y < 60 and (x == 'B' or x == 'E'):				#Sheet (DSSP code is B or E)
+			boundery.append(count)
+		elif y >= 60 and (x == 'B' or x == 'E'):				#Sheet (DSSP code is B or E)
+			surface.append(count)	
+	os.remove('ToDesign.pdb')							#Keep working directory clean
+	return(surface , boundery , core)
 
-cd $PBS_O_WORKDIR
-{ROSETTA}/main/source/bin/AbinitioRelax.default.linuxgccrelease @./flags
+def Design_Whole(pose):
+	''' Applies RosettaDesign to change the whole structure's amino acids (the whole structure all at once) while maintaining the same backbone '''
+	''' Generates the Designed.pdb file '''
+	#1 - Relax original structure
+	scorefxn = get_fa_scorefxn()							#Call the score function
+	score1_original_before_relax = scorefxn(pose)					#Measure score before relaxing
+	Relax(pose)									#Relax structure
+	score2_original_after_relax = scorefxn(pose)					#Measure score after relaxing
+	#2 - Preform RosettaDesign for whole structure
+	for inter in range(3):
+		task_pack = standard_packer_task(pose)
+		pack_mover = PackRotamersMover(scorefxn, task_pack)
+		pack_mover.apply(pose)
+		#3 - Relax pose
+		Relax(pose)
+	score3_of_design_after_relax = scorefxn(pose)					#Measure score of designed pose
+	pose.dump_pdb('Designed.pdb')							#Export final pose into a .pdb structure file
+	print(score1_original_before_relax)
+	print(score2_original_after_relax)
+	print(score3_of_design_after_relax)
 
-qsub cluster.pbs -W depend=afterokarray:${PBS_JOBID}' > abinitio.pbs
-
-cat << 'EOF' > cluster.pbs
-#!/bin/bash
-#PBS -N Clustering
-#PBS -q thin
-#PBS -l walltime=2:00:00
-#PBS -l select=1:ncpus=1
-#PBS -j oe
-
-{ROSETTA}/main/source/bin/relax.default.linuxgccrelease -database {ROSETTA}/main/database -s ./structure.pdb -relax:thorough -nooutput -nstruct 100 -out:file:silent ./relax.out
-grep SCORE ./relax.out | awk '{print $27 "\t" $2}' > ./relax.dat
-{ROSETTA}/main/source/bin/combine_silent.default.linuxgccrelease -in:file:silent ./fold_silent_*.out -out:file:silent ./fold.out
-grep SCORE ./fold.out | awk '{print $27 "\t" $2}' > ./fold.dat
-tail -n +2 "./fold.dat" > "./fold.dat.tmp" && mv "./fold.dat.tmp" "./fold.dat"
-mkdir ./cluster
-grep SCORE ./fold.out | sort -nk +2 | head -200 | awk '{print $30}' > ./list
-cat ./list | awk '{print}' ORS=" " > ./liststring
-xargs {ROSETTA}/main/source/bin/extract_pdbs.linuxgccrelease -in::file::silent ./fold.out -out:pdb -in:file:tags < ./liststring
-rm ./list
-rm ./liststring
-rm ./*.fsc
-rm ./fold_silent_*
-rm ./Abinitio.o*
-mv S_* ./cluster
-cd ./cluster
-{ROSETTA}/main/source/bin/cluster.default.linuxgccrelease -database {ROSETTA}/main/database -in:file:fullatom -cluster:radius 3 -nooutput -out:file:silent ./cluster/cluster.out -in:file:s ./cluster/*.pdb
-rm ./cluster/*.pdb
-{ROSETTA}/main/source/bin/extract_pdbs.linuxgccrelease -in::file::silent ./cluster/cluster.out -out:pdb -in:file:tags
-cd ..
-gnuplot
-set terminal postscript
-set output './plot.pdf'
-set encoding iso_8859_1
-set xlabel "RMSD (\305)"
-set ylabel 'Score'
-set yrange [:-80]
-set xrange [0:20]
-set title 'Abinitio Result'
-plot './fold.dat' lc rgb 'red' pointsize 0.2 pointtype 7 title '', \
-'./relax.dat' lc rgb 'green' pointsize 0.2 pointtype 7 title ''
-exit
-EOF
+def Design_Layer(pose):
+	''' Applies RosettaDesign to change the whole structure's amino acids (one layer at a time) while maintaining the same backbone. Should be more efficient and faster than the previous method (Design_Full) '''
+	''' Generates the Designed.pdb file '''
+	#Relax original structure
+	scorefxn = get_fa_scorefxn()							#Call the score function
+	score1_original_before_relax = scorefxn(pose)					#Measure score before relaxing
+	Relax(pose)									#Relax structure
+	score2_original_after_relax = scorefxn(pose)					#Measure score after relaxing
+	#Preform RosettaDesign one layer at a time
+	for inter in range(3):
+		#1 - Get SASA Layers
+		sasa = SASA(pose)
+		surface = sasa[0]
+		boundery = sasa[1]
+		core = sasa[2]
+		#2 - Preform RosettaDesign on each layer
+		#Design core
+		task_pack = standard_packer_task(pose)
+		pack_mover = PackRotamersMover(scorefxn , task_pack)
+		task_pack.temporarily_fix_everything()					#To prevent all amino acids from being designed
+		for AA in core:
+			coreAA = pose.residue(AA).name()
+			if coreAA == 'CYS:disulfide':
+				continue
+			else:
+				task_pack.temporarily_set_pack_residue(AA , True)	#To move only spesific amino acids
+		pack_mover.apply(pose)
+		#Design boundery
+		task_pack = standard_packer_task(pose)
+		pack_mover = PackRotamersMover(scorefxn , task_pack)
+		task_pack.temporarily_fix_everything()					#To prevent all amino acids from being designed
+		for AA in boundery:
+			boundAA = pose.residue(AA).name()
+			if boundAA == 'CYS:disulfide':
+				continue
+			else:
+				task_pack.temporarily_set_pack_residue(AA , True)	#To move only spesific amino acids
+		pack_mover.apply(pose)
+		#Design surface
+		task_pack = standard_packer_task(pose)
+		pack_mover = PackRotamersMover(scorefxn , task_pack)
+		task_pack.temporarily_fix_everything()					#To prevent all amino acids from being designed
+		for AA in surface:
+			surfAA = pose.residue(AA).name()
+			if surfAA == 'CYS:disulfide':
+				continue
+			else:
+				task_pack.temporarily_set_pack_residue(AA , True)	#To move only spesific amino acids
+		pack_mover.apply(pose)
+		#3 - Relax pose
+		Relax(pose)
+	score3_of_design_after_relax = scorefxn(pose)					#Measure score of designed pose
+	pose.dump_pdb('Designed.pdb')							#Export final pose into a .pdb structure file
+	print(score1_original_before_relax)
+	print(score2_original_after_relax)
+	print(score3_of_design_after_relax)
+#------------------------------------------------------------------------------------------------------------------------------------
+pose = pose_from_pdb(sys.argv[1])
+#Design_Whole(pose)
+Design_Layer(pose)
