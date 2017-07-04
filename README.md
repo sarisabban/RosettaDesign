@@ -22,7 +22,9 @@ This is a python script that allows fixed backbone (fixbb) design of a protein u
 
 `sudo apt install DSSP`
 
-2. You will also need some python libraries that are used within the script, install them using the following commands:
+2. It goes without saying that you need to download and compile [PyRosetta](http://www.pyrosetta.org/) to use this script.
+
+3. You will also need some python libraries that are used within the script, install them using the following commands:
 
     * If you do not have pip that installs python libraries, install it using this command:
     
