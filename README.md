@@ -41,4 +41,4 @@ This is a python script that allows fixed backbone (fixbb) design of a protein u
 
 4. The computation takes around 20-60 minutes depending on the protein's size.
 5. The script outputs only the final designed .pdb structure.
-6. Use Rosetta Abinitio to predict the fold of this new design.
+6. Use [Rosetta Abinitio](https://github.com/sarisabban/RosettaAbinitio) to predict the fold of this new design.
