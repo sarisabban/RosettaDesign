@@ -2,9 +2,9 @@
 RosettaDesign using PyRosetta
 
 ## Decription
-This is a python script that allows fixed backbone (fixbb) design of a protein using PyRosetta. It has two functions:
-1. Design_Whole(): Design the whole protein all the onces.
-2. Design_Layer(): Designs each protein layer (core, boundry, surface) seperatly. This is the default setting because it is faster and seems to be more accuate (futher testing needed).
+This is a python script that allows fixed backbone (fixbb) design of a protein using PyRosetta. Its Design class has two functions:
+1. Design.Whole(): Design the whole protein all the onces.
+2. Design.Layer(): Designs each protein layer (core, boundry, surface) seperatly. This is the default setting because it is faster and seems to be more accuate (futher testing needed).
 3. This script has only been tested in GNU/Linux.
 4. The script has the following sequence:
 
