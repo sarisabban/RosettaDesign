@@ -2,20 +2,11 @@
 RosettaDesign using PyRosetta
 
 ## Decription
-This is a python script that allows fixed backbone (fixbb) design of a protein using PyRosetta. Its Design class has two functions:
+This is a python script that allows fixed backbone (fixbb) design of a protein using PyRosetta. Its Design class has three functions:
 1. Design.Whole(): Design the whole protein all the onces.
-2. Design.Layer(): Designs each protein layer (core, boundry, surface) seperatly. This is the default setting because it is faster and seems to be more accuate (futher testing needed).
-3. This script has only been tested in GNU/Linux.
-4. The script has the following sequence:
-
-    * Relax structure
-    * Identify layers
-    * Design core
-    * Design boundary
-    * Design surface
-    * Relax structure
-    * Repeat three times steps 2-6
-    * Output final designed structure
+2. Design.Layer(): Designs each protein layer (core, boundry, surface) seperatly.
+3. Design.Pack(): Designs each protein layer (core, boundry, surface) seperatly while at the same time designing towards a better packed structure thus resulting in structures with better packed cores. This is the default setting because it is faster and seems to be more accuate (futher testing needed).
+4. This script has only been tested in GNU/Linux.
 
 ## Requirements
 1. You will require DSSP to identify the different protein layers, install using the following command:
@@ -41,6 +32,6 @@ This is a python script that allows fixed backbone (fixbb) design of a protein u
 
 `python3 RosettaDesign.py FILENAME.pdb`
 
-4. The computation takes around 20-60 minutes depending on the protein's size.
+4. The computation takes around 90-120 minutes depending on the protein's size.
 5. The script outputs only the final designed .pdb structure.
 6. Use [Rosetta Abinitio](https://github.com/sarisabban/RosettaAbinitio) to predict the fold of this new design.
