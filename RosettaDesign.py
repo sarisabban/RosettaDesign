@@ -177,7 +177,7 @@ class Design():
 		#A - Relax original structure
 		scorefxn = get_fa_scorefxn()							#Call the score function
 		score1_original_before_relax = scorefxn(pose)					#Measure score before relaxing
-#		Relax(pose)									#Relax structure
+		Relax(pose)									#Relax structure
 		score2_original_after_relax = scorefxn(pose)					#Measure score after relaxing
 		#B - FastDesign Protocol							#Uses Generic Monte Carlo with PackStat as a filter to direct FastDesign towards an optimally packed structure core
 		layers = [2 , 1 , 0]								#Layer Identity from SASA Surface = [0] , Boundary = [1] , Core = [2]
@@ -195,34 +195,34 @@ class Design():
 				Resfile.write(str(line) + ' A ALLAA\n')
 			Resfile.close()
 			#4 - Setup The FastDesign Mover
-			task = TaskFactory()
-			read = ReadResfile('Resfile.resfile')
-			task.push_back(read)
-			movemap = MoveMap()
-			movemap.set_bb(False)
-			movemap.set_chi(True)
-			mover = FastDesign()
-			mover.set_task_factory(task)
-			mover.set_movemap(movemap)
-			mover.set_scorefxn(scorefxn)
+			task = TaskFactory()							#Setup the TaskFactory
+			read = ReadResfile('Resfile.resfile')					#Call the generated Resfile
+			task.push_back(read)							#Add the Resfile to the TaskFactory
+			movemap = MoveMap()							#Setup the MoveMap
+			movemap.set_bb(False)							#Do not change the phi and psi BackBone angles
+			movemap.set_chi(True)							#Change the chi Side Chain angle
+			mover = FastDesign()							#Call the FastDesign Mover
+			mover.set_task_factory(task)						#Add the TaskFactory to it
+			mover.set_movemap(movemap)						#Add the MoveMap to it
+			mover.set_scorefxn(scorefxn)						#Add the Score Function to it
 			#5 - Setup and Apply The Generic Monte Carlo Mover
-			MC = GenericMonteCarloMover()							#Call Monter Carlo Class
-			MC.set_mover(mover)								#Load The Mover
-			MC.set_scorefxn(scorefxn)							#Set score function
-			MC.set_maxtrials(1)								#Set number of monte carlo loops
-			MC.set_temperature(1)								#Set temperature
-			MC.set_preapply(False)								#To apply Boltzmann accept/reject to all applications of the mover (always use False)
-			MC.set_drift(True)								#Make current pose = next iteration pose
-			MC.set_sampletype('high')							#Move monte carlo to higher filter score
-			MC.recover_low()								#True - at the end of application, the pose is set to the lowest (or highest if sample_type="high") scoring pose
-			MC.stopping_condition()								#Stops before trials are done if a filter evaluates to true
-			MC.task_factory(task)								#Include a Task Factory
-			MC.boltzmann(pose)								#Evaulates a pose based on the scores/filters + temperatures
-			MC.add_filter(filters , True , 1.0 , 'high' , True)				#Add a filter
-#			MC.apply(pose)									#Apply Move
-			os.remove('Resfile.resfile')							#To keeo working directory clean, and to make sure each Resfile has the info for each layer only and they do not get mixed together in one Resfile
+			MC = GenericMonteCarloMover()						#Call Monter Carlo Class
+			MC.set_mover(mover)							#Load The Mover
+			MC.set_scorefxn(scorefxn)						#Set score function
+			MC.set_maxtrials(1)							#Set number of monte carlo loops
+			MC.set_temperature(1)							#Set temperature
+			MC.set_preapply(False)							#To apply Boltzmann accept/reject to all applications of the mover (always use False)
+			MC.set_drift(True)							#Make current pose = next iteration pose
+			MC.set_sampletype('high')						#Move monte carlo to higher filter score
+			MC.recover_low()							#True - at the end of application, the pose is set to the lowest (or highest if sample_type="high") scoring pose
+			MC.stopping_condition()							#Stops before trials are done if a filter evaluates to true
+			MC.task_factory(task)							#Include a Task Factory
+			MC.boltzmann(pose)							#Evaulates a pose based on the scores/filters + temperatures
+			MC.add_filter(filters , True , 1.0 , 'high' , True)			#Add a filter (Filter Type , Adaptive , Temperature , Sample Type , Rank By)
+			MC.apply(pose)								#Apply Move
+			os.remove('Resfile.resfile')						#To keep working directory clean, and to make sure each Resfile has the info for each layer only and they do not get mixed and appended together in one Resfile
 		#C - Relax Pose
-#		Relax(pose)									#Relax structure
+		Relax(pose)									#Relax structure
 		#D - Output Result
 		score3_of_design_after_relax = scorefxn(pose)					#Measure score of designed pose
 		pose.dump_pdb('Designed.pdb')							#Export final pose into a .pdb structure file
