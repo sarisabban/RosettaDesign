@@ -211,14 +211,14 @@ class Design():
 			MC.set_scorefxn(scorefxn)						#Set score function
 			MC.set_maxtrials(10)							#Set number of monte carlo loops
 			MC.set_temperature(1)							#Set temperature
-			MC.set_preapply(False)							#To apply Boltzmann accept/reject to all applications of the mover (always use False)
+			MC.set_preapply(True)							#To apply Boltzmann accept/reject to all applications of the mover (always use False)
 			MC.set_drift(True)							#Make current pose = next iteration pose
 			MC.set_sampletype('high')						#Move monte carlo to higher filter score
-			MC.recover_low()							#True - at the end of application, the pose is set to the lowest (or highest if sample_type="high") scoring pose
-			MC.stopping_condition()							#Stops before trials are done if a filter evaluates to true
-			MC.add_filter(filters , True , 1.0 , 'high' , True)			#Add a filter (Filter Type , Adaptive , Temperature , Sample Type , Rank By)
-#			MC.task_factory(task) #Causes an infinite loop				#Include a Task Factory
-#			MC.boltzmann(pose) #For some reason hates a relaxed pose		#Evaulates a pose based on the scores/filters + temperatures
+			MC.recover_low(True)							#True - at the end of application, the pose is set to the lowest (or highest if sample_type="high") scoring pose
+			#MC.stopping_condition()							#Stops before trials are done if a filter evaluates to true
+			MC.add_filter(filters , False , 1.0 , 'high' , True)			#Add a filter (Filter Type , Adaptive , Temperature , Sample Type , Rank By)
+			#MC.task_factory(task) #Causes an infinite loop				#Include a Task Factory
+			#MC.boltzmann(pose) #For some reason hates a relaxed pose		#Evaulates a pose based on the scores/filters + temperatures
 			MC.apply(pose)								#Apply Move
 			os.remove('Resfile.resfile')						#To keep working directory clean, and to make sure each Resfile has the info for each layer only and they do not get mixed and appended together in one Resfile
 		#C - Relax Pose
