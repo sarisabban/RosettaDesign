@@ -184,8 +184,8 @@ class Design():
 				Resfile.write(str(line) + ' ' + chain + ' ALLAA\n')
 			Resfile.close()
 			#4 - Setup the FastDesign mover
-			task = pyrosetta.rosetta.core.pack.task.TaskFactory()								#Setup the TaskFactory
 			read = pyrosetta.rosetta.core.pack.task.operation.ReadResfile('Resfile.resfile')	#Call the generated Resfile
+			task = pyrosetta.rosetta.core.pack.task.TaskFactory()								#Setup the TaskFactory
 			task.push_back(read)																#Add the Resfile to the TaskFactory
 			movemap = MoveMap()																	#Setup the MoveMap
 			movemap.set_bb(False)																#Do not change the phi and psi BackBone angles
