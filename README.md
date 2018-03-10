@@ -11,19 +11,9 @@ This is a python script that allows fixed backbone (fixbb) design of a protein u
 ## Requirements
 1. You will require DSSP to identify the different protein layers, install using the following command:
 
-`sudo apt install DSSP`
+`sudo apt install dssp python-numpy python-biopython`
 
 2. It goes without saying that you need to download and compile [PyRosetta](http://www.pyrosetta.org/) to use this script.
-
-3. You will also need some python libraries that are used within the script, install them using the following commands:
-
-    * If you do not have pip that installs python libraries, install it using this command:
-    
-    `sudo apt install python3-pip`
-
-    * Install the python libraries
-    
-    `sudo python3 -m pip install numpy biopython`
 
 ## How to use
 1. This script and the desired structure to design (FILENAME.pdb) should be in the same working directory.
@@ -32,6 +22,6 @@ This is a python script that allows fixed backbone (fixbb) design of a protein u
 
 `python3 RosettaDesign.py FILENAME.pdb`
 
-4. The computation takes around 90-120 minutes depending on the protein's size.
+4. The computation takes around 6 - 12 hours depending on the protein's size.
 5. The script outputs only the final designed .pdb structure.
-6. Use [Rosetta Abinitio](https://github.com/sarisabban/RosettaAbinitio) to predict the fold of this new design.
+6. Use this [Rosetta Abinitio](https://github.com/sarisabban/RosettaAbinitio) script to predict the fold of this new design.
