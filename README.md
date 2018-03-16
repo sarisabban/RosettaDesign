@@ -11,7 +11,7 @@ This is a python script that allows fixed backbone (fixbb) design of a protein u
 ## Requirements
 1. You will require DSSP to identify the different protein layers, install using the following command:
 
-`sudo apt install dssp python-numpy python-biopython`
+`sudo apt install dssp python-numpy python-biopython python-lxml`
 
 2. It goes without saying that you need to download and compile [PyRosetta](http://www.pyrosetta.org/) to use this script.
 
