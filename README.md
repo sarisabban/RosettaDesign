@@ -22,8 +22,9 @@ This is a python script that allows fixed backbone (fixbb) design of a protein u
 
 `python3 RosettaDesign2.py FILENAME.pdb`
 
-RosettaDesign1.py works with PyRosetta4 python 3.6 release 176 and previous
-RosettaDesign2.py works with PyRosetta4 python 3.6 release 177 onwards
+RosettaDesign1.py works with PyRosetta4 python 3.6 release 176 and previous.
+
+RosettaDesign2.py works with PyRosetta4 python 3.6 release 177 onwards.
 
 4. The computation takes around 6 - 12 hours depending on the protein's size.
 5. The script outputs only the final designed .pdb structure.
