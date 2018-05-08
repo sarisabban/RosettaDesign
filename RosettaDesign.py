@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import os , Bio.PDB
+from Bio import pairwise2
 from pyrosetta import *
 from pyrosetta.toolbox import *
 init()
@@ -215,8 +216,21 @@ class Design():
 		print('Original Structure Score:' , '\t' , score1_original_before_relax)
 		print('Relaxed Original Score:' , '\t' , score2_original_after_relax)
 		print('Relaxed Design Score:' , '\t\t' , score3_of_design_after_relax)
+
+def BLAST(file1 , file2):
+	seq1 = Bio.PDB.Polypeptide.PPBuilder().build_peptides(Bio.PDB.PDBParser(QUIET = True).get_structure('X' , file1) , aa_only = True)[0].get_sequence()
+	seq2 = Bio.PDB.Polypeptide.PPBuilder().build_peptides(Bio.PDB.PDBParser(QUIET = True).get_structure('X' , file2) , aa_only = True)[0].get_sequence()
+	print(seq1)
+	print(seq2)
+	alignment = pairwise2.align.globalxx(seq1 , seq2)
+	total = alignment[0][4]
+	similarity = alignment[0][2]
+	percentage = (similarity * 100) / total
+	print('Sequence Similarity: {}%'.format(percentage))
+
 #------------------------------------------------------------------------------------------------------------------------------------
 pose = pose_from_pdb(sys.argv[1])
 #Design.Whole(pose)
 #Design.Layer(pose)
 Design.Pack(pose)
+BLAST(sys.argv[1] , 'structure.pdb')
