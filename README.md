@@ -20,12 +20,11 @@ This is a python script that allows fixed backbone (fixbb) design of a protein u
 2. The .pdb file should be cleaned for Rosetta.
 3. Run using the following command:
 
-`python3 RosettaDesign2.py PROTOCOL NUMBER_OF_STRUCTURES FILENAME.pdb`
+`python3 RosettaDesign2.py PROTOCOL FILENAME.pdb`
 
 PROTOCOL will be either fixbb (fix backbone design) or flxbb (flexible backbone design)
-NUMBER_OF_STRUCTURES is the number of structures to be produced
 FILENAME.pdb the structure in PDB format
 
-4. The computation takes around 6 - 12 hours depending on the protein's size.
+4. The computation takes around 1 - 6 hours depending on the protein's size and computer resources.
 5. The script outputs only the final designed .pdb structure.
 6. Use this [Rosetta Abinitio](https://github.com/sarisabban/RosettaAbinitio) script to predict the fold of this new design.
