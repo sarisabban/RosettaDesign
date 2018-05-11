@@ -11,7 +11,7 @@ This is a python script that allows fixed backbone (fixbb) design of a protein u
 ## Requirements
 1. You will require DSSP to identify the different protein layers, install using the following command:
 
-`sudo apt install dssp python3-biopython gnuplot`
+`sudo apt install dssp python3-biopython`
 
 2. It goes without saying that you need to download and compile [PyRosetta](http://www.pyrosetta.org/) to use this script.
 
@@ -20,11 +20,11 @@ This is a python script that allows fixed backbone (fixbb) design of a protein u
 2. The .pdb file should be cleaned for Rosetta.
 3. Run using the following command:
 
-`python3 RosettaDesign2.py FILENAME.pdb`
+`python3 RosettaDesign2.py PROTOCOL NUMBER_OF_STRUCTURES FILENAME.pdb`
 
-RosettaDesign1.py works with PyRosetta4 python 3.6 release 176 and previous.
-
-RosettaDesign2.py works with PyRosetta4 python 3.6 release 177 onwards.
+PROTOCOL will be either fixbb (fix backbone design) or flxbb (flexible backbone design)
+NUMBER_OF_STRUCTURES is the number of structures to be produced
+FILENAME.pdb the structure in PDB format
 
 4. The computation takes around 6 - 12 hours depending on the protein's size.
 5. The script outputs only the final designed .pdb structure.
