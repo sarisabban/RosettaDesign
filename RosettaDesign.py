@@ -311,7 +311,7 @@ class RosettaDesign():
 
 def main():
 	protocol = sys.argv[1]
-	iterations = sys.argv[2]
+	iterations = int(sys.argv[2])
 	filename = sys.argv[3]
 
 	RD = RosettaDesign()
