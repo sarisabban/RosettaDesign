@@ -311,24 +311,21 @@ class RosettaDesign():
 
 def main():
 	protocol = sys.argv[1]
-	iterations = int(sys.argv[2])
-	filename = sys.argv[3]
+	filename = sys.argv[2]
 
 	RD = RosettaDesign()
 
 	if protocol == 'fixbb':
-		for i in range(iterations):
-			#RD.whole_fixbb(filename)
-			#RD.layer_fixbb(filename)
-			RD.pack_fixbb(filename)
-			#RD.pack_flxbb(filename)	
+		#RD.whole_fixbb(filename)
+		#RD.layer_fixbb(filename)
+		RD.pack_fixbb(filename)
+		#RD.pack_flxbb(filename)	
 
 	elif protocol == 'flxbb':
-		for i in range(iterations):
-			#RD.whole_fixbb(filename)
-			#RD.layer_fixbb(filename)
-			#RD.pack_fixbb(filename)
-			RD.pack_flxbb(filename)
+		#RD.whole_fixbb(filename)
+		#RD.layer_fixbb(filename)
+		#RD.pack_fixbb(filename)
+		RD.pack_flxbb(filename)
 
 if __name__ == '__main__':
 	main()
