@@ -2,10 +2,125 @@
 import os
 import sys
 import Bio.PDB
+import math
 from Bio import pairwise2
 from pyrosetta import *
 from pyrosetta.toolbox import *
 init()
+
+def BluePrint(filename):
+	'''
+	This function rebuilds a protein using
+	the BluePrintBDR() mover in an attempt
+	to idealise the structure's backbone
+	and thus allow for a better desined
+	protein that folds well in the Abinitio
+	Folding simulation
+	'''
+	#Generate constraints file
+	structure = Bio.PDB.PDBParser(QUIET = True).get_structure('structure' , filename)
+	length = len(structure[0]['A'])
+	ppb = Bio.PDB.Polypeptide.PPBuilder()
+	Type = ppb.build_peptides(structure , aa_only = False)
+	model = Type
+	chain = model[0]
+	CST = []
+	CST.append(0.0)
+	for aa in range(1 , length + 1):
+		try:
+			residue1 = chain[0]
+			residue2 = chain[aa]
+			atom1 = residue1['CA']
+			atom2 = residue2['CA']
+			CST.append(atom1 - atom2)
+		except:
+			pass
+	atom = 1
+	for cst in CST:
+		line = 'AtomPair CA 1 CA ' + str(atom) + ' GAUSSIANFUNC ' + str(cst) + ' 1.0\n'
+		thefile = open('constraints' , 'a')
+		thefile.write(line)
+		thefile.close()
+		atom += 1
+	#Generate blueprint file
+	SS = []
+	SEQ = []
+	dssp = Bio.PDB.DSSP(structure[0] , filename)
+	for ss in dssp:
+		if ss[2] == 'G' or ss[2] == 'H' or ss[2] == 'I':
+			rename = 'H'
+		elif ss[2] == 'B' or ss[2] == 'E':
+			rename = 'E'
+		else:
+			rename = 'L'
+		SS.append(rename)
+		SEQ.append(ss[1])
+	count = 1
+	for ss , aa in zip(SS , SEQ):
+		blueprint = open('blueprint' , 'a')
+		line = '{} {} {}X R\n'.format(str(count) , aa , ss)
+		blueprint.write(line)
+		blueprint.close()
+		count += 1
+	#Generate sequential blueprint files
+	SS = []
+	SEQ = []
+	dssp = Bio.PDB.DSSP(structure[0] , filename)
+	for ss in dssp:
+		if ss[2] == 'G' or ss[2] == 'H' or ss[2] == 'I':
+			rename = 'H'
+		elif ss[2] == 'B' or ss[2] == 'E':
+			rename = 'E'
+		else:
+			rename = 'L'
+		SS.append(rename)
+		SEQ.append(ss[1])
+	lines = []
+	amins = 1
+	for ss , aa in zip(SS , SEQ):
+		line = '{} {} {}X'.format(str(amins) , aa , ss)
+		lines.append(line)
+		amins += 1
+	count = 1
+	for i, item in enumerate(lines[::10]):
+		blueprint = open('blueprint{}'.format(count) , 'a')
+		for j in lines:
+			if item in j:
+				index = 10
+			if index:
+				fileline = j + ' R\n'
+				blueprint.write(fileline)
+				index -= 1
+			else:
+				fileline = j + ' .\n'
+				blueprint.write(fileline)
+		blueprint.close()
+		count += 1
+	#Run BluePrint mover
+	pose = pose_from_pdb(filename)
+	scorefxn = get_fa_scorefxn()
+	relax = pyrosetta.rosetta.protocols.relax.FastRelax()
+	relax.set_scorefxn(scorefxn)
+	relax.apply(pose)
+	Secmover = pyrosetta.rosetta.protocols.fldsgn.potentials.SetSecStructEnergies(scorefxn , 'blueprint' , True)
+	Secmover.apply(pose)
+	for walk in range(1 , math.ceil(length/10)+1):
+		mover = pyrosetta.rosetta.protocols.fldsgn.BluePrintBDR()
+		mover.num_fragpick(200)
+		mover.use_fullmer(True)
+		mover.use_sequence_bias(False)
+		mover.max_linear_chainbreak(0.07)
+		mover.ss_from_blueprint(True)
+		mover.dump_pdb_when_fail('')
+		mover.set_constraints_NtoC(-1.0)
+		mover.use_abego_bias(True)
+		mover.set_constraint_file('constraints')
+		mover.set_blueprint('blueprint{}'.format(walk))
+		mover.apply(pose)
+	relax.apply(pose)
+	pose.dump_pdb('rebuilt.pdb')
+	os.remove('constraints')
+	os.system('rm blueprint*')
 
 class RosettaDesign():
 	'''
@@ -313,19 +428,23 @@ def main():
 	protocol = sys.argv[1]
 	filename = sys.argv[2]
 
+	BluePrint(filename)
+
 	RD = RosettaDesign()
 
 	if protocol == 'fixbb':
-		#RD.whole_fixbb(filename)
-		#RD.layer_fixbb(filename)
-		RD.pack_fixbb(filename)
-		#RD.pack_flxbb(filename)	
+		#RD.whole_fixbb('rebuilt.pdb')
+		#RD.layer_fixbb('rebuilt.pdb')
+		RD.pack_fixbb('rebuilt.pdb')
+		#RD.pack_flxbb('rebuilt.pdb')
 
 	elif protocol == 'flxbb':
-		#RD.whole_fixbb(filename)
-		#RD.layer_fixbb(filename)
-		#RD.pack_fixbb(filename)
-		RD.pack_flxbb(filename)
+		#RD.whole_fixbb('rebuilt.pdb')
+		#RD.layer_fixbb('rebuilt.pdb')
+		#RD.pack_fixbb('rebuilt.pdb')
+		RD.pack_flxbb('rebuilt.pdb')
+
+	os.remove('rebuilt.pdb')
 
 if __name__ == '__main__':
 	main()
