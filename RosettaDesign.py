@@ -436,12 +436,8 @@ def main():
 		#RD.whole_fixbb('rebuilt.pdb')
 		#RD.layer_fixbb('rebuilt.pdb')
 		RD.pack_fixbb('rebuilt.pdb')
-		#RD.pack_flxbb('rebuilt.pdb')
 
 	elif protocol == 'flxbb':
-		#RD.whole_fixbb('rebuilt.pdb')
-		#RD.layer_fixbb('rebuilt.pdb')
-		#RD.pack_fixbb('rebuilt.pdb')
 		RD.pack_flxbb('rebuilt.pdb')
 
 	os.remove('rebuilt.pdb')
