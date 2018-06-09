@@ -7,8 +7,6 @@ from pyrosetta import *
 from pyrosetta.toolbox import *
 init()
 
-
-
 class RosettaDesign():
 	'''
 	This class preforms RosettaDesign either fixed backbone 
@@ -78,7 +76,7 @@ class RosettaDesign():
 		GMC.set_recover_low(True)
 		mover = pyrosetta.rosetta.protocols.moves.SequenceMover()
 		mover.add_mover(pack)
-		mover.add_mover(GMC)
+		mover.add_mover(GMC)#####<--- problem here not accepting not rejecting moves
 		Dscore_before = 0
 		Dpose_work = Pose()
 		Dpose_lowest = Pose()
@@ -101,9 +99,9 @@ class RosettaDesign():
 		#D - Print report
 		print('==================== Result Report ====================')
 		print('Relax Scores:\n' , Rscores)
-		print('Chosen Lowest Score:' , RFinalScore)
+		print('Chosen Lowest Score:' , RFinalScore , '\n')
 		print('Design Scores:\n' , Dscores)
-		print('Chosen Lowest Score:' , DFinalScore)
+		print('Chosen Lowest Score:' , DFinalScore , '\n')
 		print('BLAST result, compairing the original structure to the designed structure:')
 		RosettaDesign.BLAST(self , filename , 'structure.pdb')
 
@@ -114,13 +112,12 @@ class RosettaDesign():
 		Generates the structure.pdb file
 		'''
 
-
 def main(protocol , filename):
 	RD = RosettaDesign()
 	if protocol == 'fixbb':
-		RD.fixbb(filename , 50 , 100)
+		RD.fixbb(filename , 50 , 100)	##### <-------- Requires Work
 	elif protocol == 'flxbb':
-		RD.flxbb(filename , 50 , 100)
+		RD.flxbb(filename , 50 , 100)	##### <-------- Requires Work
 
 if __name__ == '__main__':
 	main(sys.argv[1] , sys.argv[2])
