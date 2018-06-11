@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+
 import os
 import sys
 import Bio.PDB
@@ -65,18 +66,6 @@ class RosettaDesign():
 		#B - Perform fixbb RosettaDesign
 		packtask = standard_packer_task(pose)
 		pack = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn , packtask)
-		backrub = pyrosetta.rosetta.protocols.backrub.BackrubMover()
-		backrub.pivot_residues(pose)
-		GMC = pyrosetta.rosetta.protocols.monte_carlo.GenericMonteCarloMover()
-		GMC.set_mover(backrub)
-		GMC.set_scorefxn(scorefxn)
-		GMC.set_maxtrials(500)
-		GMC.set_temperature(1.0)
-		GMC.set_preapply(False)
-		GMC.set_recover_low(True)
-		mover = pyrosetta.rosetta.protocols.moves.SequenceMover()
-		mover.add_mover(pack)
-		mover.add_mover(GMC)#####<--- problem here not accepting not rejecting moves
 		Dscore_before = 0
 		Dpose_work = Pose()
 		Dpose_lowest = Pose()
@@ -84,7 +73,7 @@ class RosettaDesign():
 		Dscores.append(Dscore_before)
 		for nstruct in range(design_iters):
 			Dpose_work.assign(pose)
-			mover.apply(Dpose_work)
+			pack.apply(Dpose_work)
 			Dscore_after = scorefxn(Dpose_work)
 			Dscores.append(Dscore_after)
 			if Dscore_after < Dscore_before:
@@ -111,13 +100,94 @@ class RosettaDesign():
 		amino acid sequence while allowing for a flexible backbone.
 		Generates the structure.pdb file
 		'''
+		#A - Relax original structure
+		pose = pose_from_pdb(filename)
+		chain = pose.pdb_info().chain(1)
+		scorefxn = get_fa_scorefxn()
+		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
+		relax.set_scorefxn(scorefxn)
+		Rscore_before = scorefxn(pose)
+		Rpose_work = Pose()
+		Rpose_lowest = Pose()
+		Rscores = []
+		Rscores.append(Rscore_before)
+		for nstruct in range(relax_iters):
+			Rpose_work.assign(pose)
+			relax.apply(Rpose_work)
+			Rscore_after = scorefxn(Rpose_work)
+			Rscores.append(Rscore_after)
+			if Rscore_after < Rscore_before:
+				Rscore_before = Rscore_after
+				Rpose_lowest.assign(Rpose_work)
+			else:
+				continue
+		pose.assign(Rpose_lowest)
+		RFinalScore = scorefxn(pose)
+		#B - Perform flxbb RosettaDesign
+		packtask = standard_packer_task(pose)
+		pack = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn , packtask)
+
+#		task = pyrosetta.rosetta.core.pack.task.TaskFactory()
+#		task.create_task_and_apply_taskoperations(pose)
+#		task.create_packer_task(pose)
+
+#		vector1 = pyrosetta.rosetta.utility.vector1_unsigned_long()
+#		vector1.max_size()
+
+		backrub = pyrosetta.rosetta.protocols.backrub.BackrubMover()
+		backrub.pivot_residues(pose)
+#		backrub.set_pivot_residues(vector1)
+
+#		backrub = pyrosetta.rosetta.protocols.backrub.BackrubProtocol()
+#		backrub.set_pivot_residues(vector1)
+		
+		GMC = pyrosetta.rosetta.protocols.monte_carlo.GenericMonteCarloMover()
+		GMC.set_mover(backrub)
+		GMC.set_scorefxn(scorefxn)
+#		GMC.task_factory(task)
+		GMC.set_maxtrials(500)
+		GMC.set_max_accepted_trials(10)
+		GMC.set_temperature(1.0)
+		GMC.set_preapply(False)
+		GMC.set_recover_low(True)
+		mover = pyrosetta.rosetta.protocols.moves.SequenceMover()
+		mover.add_mover(pack)
+		mover.add_mover(GMC)
+		Dscore_before = 0
+		Dpose_work = Pose()
+		Dpose_lowest = Pose()
+		Dscores = []
+		Dscores.append(Dscore_before)
+		for nstruct in range(design_iters):
+			Dpose_work.assign(pose)
+			mover.apply(Dpose_work)
+			Dscore_after = scorefxn(Dpose_work)
+			Dscores.append(Dscore_after)
+			if Dscore_after < Dscore_before:
+				Dscore_before = Dscore_after
+				Dpose_lowest.assign(Dpose_work)
+			else:
+				continue
+		pose.assign(Dpose_lowest)
+		DFinalScore = scorefxn(pose)
+		#C - Output Result
+		pose.dump_pdb('structure.pdb')
+		os.system('rm EMPTY_JOB*')
+		#D - Print report
+		print('==================== Result Report ====================')
+		print('Relax Scores:\n' , Rscores)
+		print('Chosen Lowest Score:' , RFinalScore , '\n')
+		print('Design Scores:\n' , Dscores)
+		print('Chosen Lowest Score:' , DFinalScore , '\n')
+		print('BLAST result, compairing the original structure to the designed structure:')
+		RosettaDesign.BLAST(self , filename , 'structure.pdb')
 
 def main(protocol , filename):
 	RD = RosettaDesign()
 	if protocol == 'fixbb':
-		RD.fixbb(filename , 50 , 100)	##### <-------- Requires Work
+		RD.fixbb(filename , 50 , 100)
 	elif protocol == 'flxbb':
-		RD.flxbb(filename , 50 , 100)	##### <-------- Requires Work
+		RD.flxbb(filename , 3 , 3)
 
 if __name__ == '__main__':
 	main(sys.argv[1] , sys.argv[2])
