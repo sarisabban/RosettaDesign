@@ -125,28 +125,6 @@ class RosettaDesign():
 		RFinalScore = scorefxn(pose)
 		#B - Perform flxbb RosettaDesign
 		mover = pyrosetta.rosetta.protocols.flxbb.FlxbbDesign()
-		'''
-		packtask = standard_packer_task(pose)
-		pack = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn , packtask)
-		pack.task_is_valid(pose)
-		backrub = pyrosetta.rosetta.protocols.backrub.BackrubMover()
-		backrub.pivot_residues(pose)
-		GMC = pyrosetta.rosetta.protocols.monte_carlo.GenericMonteCarloMover()
-		GMC.set_mover(backrub)
-		GMC.set_scorefxn(scorefxn)
-		GMC.set_maxtrials(500)
-		GMC.set_max_accepted_trials(10)
-		GMC.set_temperature(1.0)
-		GMC.set_preapply(False)
-		GMC.set_recover_low(True)
-		mover = pyrosetta.rosetta.protocols.moves.SequenceMover()
-		mover.add_mover(pack)
-		mover.add_mover(GMC)
-		#mover.add_mover(pack)
-		#mover.add_mover(GMC)
-		#mover.add_mover(pack)
-		#mover.add_mover(GMC)
-		'''
 		Dscore_before = 0
 		Dpose_work = Pose()
 		Dpose_lowest = Pose()
