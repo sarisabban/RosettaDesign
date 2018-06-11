@@ -124,27 +124,16 @@ class RosettaDesign():
 		pose.assign(Rpose_lowest)
 		RFinalScore = scorefxn(pose)
 		#B - Perform flxbb RosettaDesign
+		mover = pyrosetta.rosetta.protocols.flxbb.FlxbbDesign()
+		'''
 		packtask = standard_packer_task(pose)
 		pack = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn , packtask)
-
-#		task = pyrosetta.rosetta.core.pack.task.TaskFactory()
-#		task.create_task_and_apply_taskoperations(pose)
-#		task.create_packer_task(pose)
-
-#		vector1 = pyrosetta.rosetta.utility.vector1_unsigned_long()
-#		vector1.max_size()
-
+		pack.task_is_valid(pose)
 		backrub = pyrosetta.rosetta.protocols.backrub.BackrubMover()
 		backrub.pivot_residues(pose)
-#		backrub.set_pivot_residues(vector1)
-
-#		backrub = pyrosetta.rosetta.protocols.backrub.BackrubProtocol()
-#		backrub.set_pivot_residues(vector1)
-		
 		GMC = pyrosetta.rosetta.protocols.monte_carlo.GenericMonteCarloMover()
 		GMC.set_mover(backrub)
 		GMC.set_scorefxn(scorefxn)
-#		GMC.task_factory(task)
 		GMC.set_maxtrials(500)
 		GMC.set_max_accepted_trials(10)
 		GMC.set_temperature(1.0)
@@ -153,6 +142,11 @@ class RosettaDesign():
 		mover = pyrosetta.rosetta.protocols.moves.SequenceMover()
 		mover.add_mover(pack)
 		mover.add_mover(GMC)
+		#mover.add_mover(pack)
+		#mover.add_mover(GMC)
+		#mover.add_mover(pack)
+		#mover.add_mover(GMC)
+		'''
 		Dscore_before = 0
 		Dpose_work = Pose()
 		Dpose_lowest = Pose()
@@ -172,7 +166,6 @@ class RosettaDesign():
 		DFinalScore = scorefxn(pose)
 		#C - Output Result
 		pose.dump_pdb('structure.pdb')
-		os.system('rm EMPTY_JOB*')
 		#D - Print report
 		print('==================== Result Report ====================')
 		print('Relax Scores:\n' , Rscores)
@@ -187,7 +180,7 @@ def main(protocol , filename):
 	if protocol == 'fixbb':
 		RD.fixbb(filename , 50 , 100)
 	elif protocol == 'flxbb':
-		RD.flxbb(filename , 3 , 3)
+		RD.flxbb(filename , 1 , 1)
 
 if __name__ == '__main__':
 	main(sys.argv[1] , sys.argv[2])
