@@ -21,8 +21,8 @@ This is a python script that allows fixed backbone (fixbb) or flexible backbone 
 
 `python3 RosettaDesign.py PROTOCOL FILENAME.pdb`
 
-PROTOCOL will be either fixbb (for fix backbone design) or flxbb (for flexible backbone design)
-FILENAME.pdb the structure to be designed in PDB format
+PROTOCOL = Will be either fixbb (for fix backbone design) or flxbb (for flexible backbone design)
+FILENAME.pdb = The structure to be designed in PDB format
 
 5. The computation takes around 24-48 hours depending on the protein's size and computer resources.
 6. The script will preform 50 relax operations (taking the lowest scoring structure) then 100 design operations (taking the lowest scoring structure).
