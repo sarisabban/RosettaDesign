@@ -32,7 +32,7 @@ class RosettaDesign():
 		percentage = (similarity * 100) / total
 		print(seq1)
 		print(seq2)
-		print('Sequence Similarity: {}%'.format(percentage))
+		print('Sequence Similarity: {}%'.format(round(percentage , 3)))
 
 	def fixbb(self , filename , relax_iters , design_iters):
 		'''
@@ -91,7 +91,7 @@ class RosettaDesign():
 		print('Chosen Lowest Score:' , RFinalScore , '\n')
 		print('Design Scores:\n' , Dscores)
 		print('Chosen Lowest Score:' , DFinalScore , '\n')
-		print('BLAST result, compairing the original structure to the designed structure:')
+		print('BLAST result, comparing the original structure to the designed structure:')
 		RosettaDesign.BLAST(self , filename , 'structure.pdb')
 
 	def flxbb(self , filename , relax_iters , design_iters):
@@ -150,7 +150,7 @@ class RosettaDesign():
 		print('Chosen Lowest Score:' , RFinalScore , '\n')
 		print('Design Scores:\n' , Dscores)
 		print('Chosen Lowest Score:' , DFinalScore , '\n')
-		print('BLAST result, compairing the original structure to the designed structure:')
+		print('BLAST result, comparing the original structure to the designed structure:')
 		RosettaDesign.BLAST(self , filename , 'structure.pdb')
 
 def main(protocol , filename):
