@@ -158,7 +158,7 @@ def main(protocol , filename):
 	if protocol == 'fixbb':
 		RD.fixbb(filename , 50 , 100)
 	elif protocol == 'flxbb':
-		RD.flxbb(filename , 1 , 1)
+		RD.flxbb(filename , 50 , 100)
 
 if __name__ == '__main__':
 	main(sys.argv[1] , sys.argv[2])
