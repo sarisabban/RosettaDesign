@@ -24,7 +24,7 @@ This is a python script that allows fixed backbone (fixbb) or flexible backbone 
 * PROTOCOL = Will be either fixbb (for fix backbone design) or flxbb (for flexible backbone design)
 * FILENAME.pdb = The structure to be designed in PDB format
 
-5. The computation takes around 24-48 hours depending on the protein's size and computer resources.
+5. The computation takes around 24-48 hours (fixbb) or 72-120 hours (flxbb) depending on the protein's size and computer resources.
 6. The script will preform 50 relax operations (taking the lowest scoring structure) then 100 design operations (taking the lowest scoring structure).
 7. The script outputs only one file which is the final designed structure named *structure.pdb*.
 8. Use this [Rosetta Abinitio](https://github.com/sarisabban/RosettaAbinitio) script to predict the fold of your new desgined structure.
