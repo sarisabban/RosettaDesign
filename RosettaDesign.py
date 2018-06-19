@@ -493,11 +493,11 @@ class RosettaDesign():
 def main(protocol, filename):
 	RD = RosettaDesign()
 	if protocol == 'fixbb':
-		RD.fixbb(filename, 1, 1)
-		RD.Refine('fixbb.pdb', RD.Layers('fixbb.pdb'), 1)
+		RD.fixbb(filename, 50, 100)
+		RD.Refine('fixbb.pdb', RD.Layers('fixbb.pdb'), 50)
 	elif protocol == 'flxbb':
-		RD.flxbb(filename, 1, 1)
-		RD.Refine('flxbb.pdb', RD.Layers('flxbb.pdb'), 1)
+		RD.flxbb(filename, 50, 100)
+		RD.Refine('flxbb.pdb', RD.Layers('flxbb.pdb'), 50)
 
 if __name__ == '__main__':
 	main(sys.argv[1], sys.argv[2])
