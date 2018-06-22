@@ -354,7 +354,7 @@ class RosettaDesign():
 							or r == 'N' or r == 'Q'
 							or r == 'S' or r == 'T'
 							or r == 'P' or r == 'D'
-							or r == 'E' or r == 'H'
+							or r == 'E' or r == 'K'
 							or r == 'R'):
 				MutPos.append(' ')
 			elif a=='C' and s=='L' and (	   r == 'A' or r == 'V'
@@ -373,7 +373,8 @@ class RosettaDesign():
 				MutPos.append(' ')
 			elif a=='C' and s=='H' and (	   r == 'A' or r == 'V'
 							or r == 'I' or r == 'L'
-							or r == 'F' or r == 'W'):
+							or r == 'F' or r == 'W'
+							or r == 'M'):
 				MutPos.append(' ')
 			elif a=='S' and s=='S' and (	   r == 'Q' or r == 'T'
 							or r == 'Y'):
@@ -421,31 +422,31 @@ class RosettaDesign():
 		resfile = open('structure.res', 'a')
 		resfile.write('NATRO\nSTART\n')
 		for n, r, s, a in mutations:
-			if s == 'L' and a == 'S':
+			if s == 'S' and a == 'L':
 				line = '{} A PIKAA PGNQSTDERKH\n'.format(n)
 				resfile.write(line)
-			elif s == 'H' and a == 'S':
+			elif s == 'S' and a == 'H':
 				line = '{} A PIKAA QEKH\n'.format(n)
 				resfile.write(line)
 			elif s == 'S' and a == 'S':
 				line = '{} A PIKAA QTY\n'.format(n)
 				resfile.write(line)
-			elif s == 'L' and a == 'B':
+			elif s == 'B' and a == 'L':
 				line = '{} A PIKAA AVILFYWGNQSTPDEKR\n'.format(n)
 				resfile.write(line)
-			elif s == 'H' and a == 'B':
+			elif s == 'B' and a == 'H':
 				line = '{} A PIKAA AVILWQEKFM\n'.format(n)
 				resfile.write(line)
-			elif s == 'S' and a == 'B':
+			elif s == 'B' and a == 'S':
 				line = '{} A PIKAA AVILFYWQTM\n'.format(n)
 				resfile.write(line)
-			elif s == 'L' and a == 'C':
+			elif s == 'C' and a == 'L':
 				line = '{} A PIKAA AVILPFWM\n'.format(n)
 				resfile.write(line)
-			elif s == 'H' and a == 'C':
+			elif s == 'C' and a == 'H':
 				line = '{} A PIKAA AVILFWM\n'.format(n)
 				resfile.write(line)
-			elif s == 'S' and a == 'C':
+			elif s == 'C' and a == 'S':
 				line = '{} A PIKAA AVILFWM\n'.format(n)
 				resfile.write(line)
 		resfile.close()
@@ -480,24 +481,41 @@ class RosettaDesign():
 				continue
 		pose.assign(Dpose_lowest)
 		DFinalScore = scorefxn(pose)
+		os.remove('structure.res')
 		#C - Output Result
 		pose.dump_pdb('structure.pdb')
-		os.remove('structure.res')
 		#D - Print report
 		print('==================== Result Report ====================')
 		print('Refine Scores:\n', Dscores)
 		print('Chosen Lowest Score:', DFinalScore, '\n')
 		RosettaDesign.BLAST(self, sys.argv[2], 'structure.pdb')
-		RosettaDesign.Layers(self, 'structure.pdb')
 
 def main(protocol, filename):
 	RD = RosettaDesign()
 	if protocol == 'fixbb':
 		RD.fixbb(filename, 50, 100)
-		RD.Refine('fixbb.pdb', RD.Layers('fixbb.pdb'), 50)
+		mutations = RD.Layers('fixbb.pdb')
+		RD.Refine('fixbb.pdb', mutations, 50)
+		for i in range(50):
+			mutations = RD.Layers('structure.pdb')
+			if mutations != []:
+				os.rename('structure.pdb', 'fixbb{}.pdb'.format(str(i+1)))
+				RD.Refine('fixbb{}.pdb'.format(str(i+1)), mutations, 50)
+			else:
+				break
 	elif protocol == 'flxbb':
 		RD.flxbb(filename, 50, 100)
-		RD.Refine('flxbb.pdb', RD.Layers('flxbb.pdb'), 50)
+		mutations = RD.Layers('flxbb.pdb')
+		RD.Refine('flxbb.pdb', mutations, 50)
+		for i in range(50):
+			mutations = RD.Layers('structure.pdb')
+			if mutations != []:
+				os.rename('structure.pdb', 'flxbb{}.pdb'.format(str(i+1)))
+				RD.Refine('flxbb{}.pdb'.format(str(i+1)), mutations, 50)
+			else:
+				break
+	else:
+		print('Error in command string')
 
 if __name__ == '__main__':
 	main(sys.argv[1], sys.argv[2])
