@@ -2,10 +2,11 @@
 RosettaDesign using PyRosetta
 
 ## Decription
-This is a python script that allows fixed backbone (fixbb) or flexible backbone (flxbb) design of a protein using PyRosetta using any of the following protocols:
-1. fixbb: Designs the whole protein keeping the backbone fixed.
-2. flxbb: Designs the whole protein while allowing for a flexible backbone.
-3. This script has only been tested in GNU/Linux.
+This is a python script that allows fixed backbone (fixbb) or flexible backbone (flxbb) design of a protein in PyRosetta using any of the following protocols:
+1. Remodel or do not remodel loops.
+2. fixbb: Designs the whole protein keeping the backbone fixed.
+3. flxbb: Designs the whole protein while allowing for a flexible backbone.
+This script has only been tested in GNU/Linux.
 
 ## Requirements
 1. You will need to download and compile [PyRosetta](http://www.pyrosetta.org/).
@@ -19,8 +20,9 @@ This is a python script that allows fixed backbone (fixbb) or flexible backbone 
 3. The .pdb file should be [cleaned](https://www.rosettacommons.org/docs/latest/rosetta_basics/preparation/preparing-structures) for Rosetta/PyRosetta.
 4. Run using the following command:
 
-`python3 RosettaDesign.py PROTOCOL FILENAME.pdb`
+`python3 RosettaDesign.py REMODELING PROTOCOL FILENAME.pdb`
 
+* REMODELING = `remodel` to remdel just the large loops, or `noremodel` to not perform loop remodeling
 * PROTOCOL = Will be either fixbb (for fix backbone design) or flxbb (for flexible backbone design)
 * FILENAME.pdb = The structure to be designed in PDB format
 
