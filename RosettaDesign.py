@@ -533,7 +533,7 @@ class RosettaDesign():
 		#A - Generate a resfile
 		resfile = open('structure.res', 'a')
 		resfile.write('NATRO\nSTART\n')
-		for n, r, s, a in mutations:
+		for n, r, a, s in mutations:
 			if s == 'S' and a == 'L':
 				line = '{} A PIKAA PGNQSTDERKH\n'.format(n)
 				resfile.write(line)
