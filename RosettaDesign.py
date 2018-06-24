@@ -600,7 +600,7 @@ class RosettaDesign():
 		print('==================== Result Report ====================')
 		print('Refine Scores:\n', Dscores)
 		print('Chosen Lowest Score:', DFinalScore, '\n')
-		RosettaDesign.BLAST(self, sys.argv[2], 'structure.pdb')
+		RosettaDesign.BLAST(self, sys.argv[3], 'structure.pdb')
 
 def main(protocol, remodel, filename):
 	RD = RosettaDesign()
