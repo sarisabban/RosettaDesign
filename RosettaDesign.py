@@ -153,6 +153,118 @@ class RosettaDesign():
 		print('BLAST result, comparing the original structure to the designed structure:')
 		RosettaDesign.BLAST(self, filename, 'flxbb.pdb')
 
+	def BDR(self, filename, refine_iters):
+		#A - Generate constraints file
+		structure = Bio.PDB.PDBParser(QUIET=True).get_structure('{}'.format(filename), filename)
+		length = len(structure[0]['A'])
+		ppb = Bio.PDB.Polypeptide.PPBuilder()
+		Type = ppb.build_peptides(structure, aa_only=False)
+		model = Type
+		chain = model[0]
+		CST = []
+		CST.append(0.0)
+		for aa in range(1, length+1):
+			try:
+				residue1 = chain[0]
+				residue2 = chain[aa]
+				atom1 = residue1['CA']
+				atom2 = residue2['CA']
+				CST.append(atom1-atom2)
+			except:
+				pass
+		atom = 1
+		for cst in CST:
+			line = 'AtomPair CA 1 CA '+str(atom)+' GAUSSIANFUNC '+str(cst)+' 1.0\n'
+			thefile = open('structure.constraints', 'a')
+			thefile.write(line)
+			thefile.close()
+			atom += 1
+		#B - Generate blueprint file (remodeling only large loops)
+		dssp = Bio.PDB.DSSP(structure[0], filename)
+		SS = []
+		SEQ = []
+		for ss in dssp:
+			if ss[2] == 'G' or ss[2] == 'H' or ss[2] == 'I':
+				rename = 'HX'
+			elif ss[2] == 'B' or ss[2] == 'E':
+				rename = 'EX'
+			else:
+				rename = 'LX'
+			SS.append(rename)
+			SEQ.append(ss[1])
+		buf = []
+		items = []
+		l_seen = 0
+		for count, (ss, aa) in enumerate(zip(SS, SEQ), 1):
+			buf.append((count, aa, ss))
+			if 'LX' in {ss, aa}:
+				l_seen += 1
+				if l_seen >= 3:
+					for count, aa, ss in buf:
+						line = [str(count), aa, ss, '.' if ss in {'HX', 'EX'} else 'R']
+						line = ' '.join(line)
+						items.append(line)
+					buf.clear()
+			else:
+				l_seen = 0
+				for count, aa, ss in buf:
+					line = [str(count), aa, ss, '.']
+					line = ' '.join(line)
+					items.append(line)
+				buf.clear()
+		if int(items[-1].split()[0]) != count:
+			line = [str(count), aa, ss, '.']
+			line = ' '.join(line)
+			items.append(line)
+		blueprint = open('structure.blueprint', 'a')
+		for line in items:
+			blueprint.write(line + '\n')
+		blueprint.close()
+		#C - Run BluePrint mover
+		pose = pose_from_pdb(filename)
+		scorefxn = get_fa_scorefxn()
+		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
+		relax.set_scorefxn(scorefxn)
+		secstr = pyrosetta.rosetta.protocols.fldsgn.potentials.SetSecStructEnergies(scorefxn,'structure.blueprint', True)
+		secstr.apply(pose)
+		BDR = pyrosetta.rosetta.protocols.fldsgn.BluePrintBDR()
+		BDR.num_fragpick(200)
+		BDR.use_fullmer(True)
+		BDR.use_sequence_bias(False)
+		BDR.max_linear_chainbreak(0.07)
+		BDR.ss_from_blueprint(True)
+		BDR.dump_pdb_when_fail('')
+		BDR.set_constraints_NtoC(-1.0)
+		BDR.use_abego_bias(True)
+		#BDR.set_constraint_file('structure.constraints')
+		BDR.set_blueprint('structure.blueprint')
+		Dscore_before = 0
+		Dpose_work = Pose()
+		Dpose_lowest = Pose()
+		Dscores = []
+		Dscores.append(Dscore_before)
+		for nstruct in range(refine_iters):
+			Dpose_work.assign(pose)
+			BDR.apply(Dpose_work)
+			relax.apply(Dpose_work)
+			Dscore_after = scorefxn(Dpose_work)
+			Dscores.append(Dscore_after)
+			if Dscore_after < Dscore_before:
+				Dscore_before = Dscore_after
+				Dpose_lowest.assign(Dpose_work)
+			else:
+				continue
+		pose.assign(Dpose_lowest)
+		DFinalScore = scorefxn(pose)
+		#D - Output Result
+		pose.dump_pdb('remodel.pdb')
+		os.remove('structure.constraints')
+		os.remove('structure.blueprint')
+		#E - Print report
+		print('==================== Result Report ====================')
+		print('Design Scores:\n', Dscores)
+		print('Chosen Lowest Score:', DFinalScore, '\n')
+
 	def Layers(self, filename):
 		'''
 		This function will calculate the solvent-accessible surface area
@@ -470,7 +582,7 @@ class RosettaDesign():
 		for nstruct in range(refine_iters):
 			Dpose_work.assign(pose)
 			pack.apply(Dpose_work)
-			ideal.apply(pose)
+			ideal.apply(Dpose_work)
 			relax.apply(Dpose_work)
 			Dscore_after = scorefxn(Dpose_work)
 			Dscores.append(Dscore_after)
@@ -490,10 +602,15 @@ class RosettaDesign():
 		print('Chosen Lowest Score:', DFinalScore, '\n')
 		RosettaDesign.BLAST(self, sys.argv[2], 'structure.pdb')
 
-def main(protocol, filename):
+def main(protocol, remodel, filename):
 	RD = RosettaDesign()
 	if protocol == 'fixbb':
-		RD.fixbb(filename, 50, 100)
+		if remodel == 'remodel':
+			RD.BDR(filename, 200)
+			RD.fixbb('remodel.pdb', 50, 100)
+		elif remodel == 'noremodel':
+			RD.fixbb(filename, 50, 100)
+		print('_____THE REST_____')
 		mutations = RD.Layers('fixbb.pdb')
 		RD.Refine('fixbb.pdb', mutations, 50)
 		for i in range(50):
@@ -504,7 +621,13 @@ def main(protocol, filename):
 			else:
 				break
 	elif protocol == 'flxbb':
-		RD.flxbb(filename, 50, 100)
+		if remodel == 'remodel':
+			RD.BDR(filename, 200)
+			RD.flxbb('remodel.pdb', 50, 100)
+		if remodel == 'noremodel':
+			pass
+			RD.flxbb(filename, 50, 100)
+		print('_____THE REST_____')
 		mutations = RD.Layers('flxbb.pdb')
 		RD.Refine('flxbb.pdb', mutations, 50)
 		for i in range(50):
@@ -518,4 +641,4 @@ def main(protocol, filename):
 		print('Error in command string')
 
 if __name__ == '__main__':
-	main(sys.argv[1], sys.argv[2])
+	main(sys.argv[1], sys.argv[2], sys.argv[3])
