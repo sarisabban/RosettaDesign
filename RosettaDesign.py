@@ -624,7 +624,6 @@ def main(protocol, remodel, filename):
 			RD.BDR(filename, 200)
 			RD.flxbb('remodel.pdb', 50, 100)
 		if remodel == 'noremodel':
-			pass
 			RD.flxbb(filename, 50, 100)
 		mutations = RD.Layers('flxbb.pdb')
 		RD.Refine('flxbb.pdb', mutations, 50)
