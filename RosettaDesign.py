@@ -610,7 +610,6 @@ def main(protocol, remodel, filename):
 			RD.fixbb('remodel.pdb', 50, 100)
 		elif remodel == 'noremodel':
 			RD.fixbb(filename, 50, 100)
-		print('_____THE REST_____')
 		mutations = RD.Layers('fixbb.pdb')
 		RD.Refine('fixbb.pdb', mutations, 50)
 		for i in range(50):
@@ -627,7 +626,6 @@ def main(protocol, remodel, filename):
 		if remodel == 'noremodel':
 			pass
 			RD.flxbb(filename, 50, 100)
-		print('_____THE REST_____')
 		mutations = RD.Layers('flxbb.pdb')
 		RD.Refine('flxbb.pdb', mutations, 50)
 		for i in range(50):
