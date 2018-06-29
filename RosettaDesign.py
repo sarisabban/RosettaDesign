@@ -624,7 +624,7 @@ def MainProtocol(protocol, filename):
 
 
 
-def MCProtocol(filename, relax_iters, refine_iters , kT, cycles, jobs, job_output):
+def MCProtocol(filename, relax_iters , kT, cycles, jobs, job_output):
 	'''
 	Performing flexible backbone RosettaDesign using the
 	Monte Carlo method using the following sequence:
@@ -740,6 +740,8 @@ def MCProtocol(filename, relax_iters, refine_iters , kT, cycles, jobs, job_outpu
 def MCflxbb(filename, relax_iters, kT, cycles, jobs, job_output):
 	# Relax
 	pose = pose_from_pdb(filename)
+	starting_pose = Pose()
+	starting_pose.assign(pose)
 	scorefxn = get_fa_scorefxn()
 	relax = pyrosetta.rosetta.protocols.relax.FastRelax()
 	relax.set_scorefxn(scorefxn)
@@ -831,7 +833,7 @@ def MCflxbb(filename, relax_iters, kT, cycles, jobs, job_output):
 
 
 if __name__ == '__main__':
-#	MainProtocol(sys.argv[1], sys.argv[2])	# Try 10 iterations of this script and choose the structure with the lowest fragment RMSD (average<2 and max<5). Preferred command: python3 RosettaDesign.py flxbb FILENAME.pdb
+	MainProtocol(sys.argv[1], sys.argv[2])	# Try 10 iterations of this script and choose the structure with the lowest fragment RMSD (average<2 and max<5). Preferred command: python3 RosettaDesign.py flxbb FILENAME.pdb
 
-	MCProtocol('original.pdb', 1, 1, 1.0, 1, 1, 'structure')
+#	MCProtocol('original.pdb', 1, 1.0, 1, 1, 'structure')
 #	MCflxbb('original.pdb', 1, 1.0, 1, 1, 'structure')
