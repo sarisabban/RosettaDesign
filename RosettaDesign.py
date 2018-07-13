@@ -737,48 +737,6 @@ def MCflxbb(filename, relax_iters, kT, cycles, jobs, job_output):
 			Rpose_lowest.assign(Rpose_work)
 		else:
 			continue
-	# Generate blueprint file
-	structure = Bio.PDB.PDBParser(QUIET=True).get_structure('{}'.format(filename), filename)
-	dssp = Bio.PDB.DSSP(structure[0], filename)
-	SS = []
-	SEQ = []
-	for ss in dssp:
-		if ss[2] == 'G' or ss[2] == 'H' or ss[2] == 'I':
-			rename = 'HX'
-		elif ss[2] == 'B' or ss[2] == 'E':
-			rename = 'EX'
-		else:
-			rename = 'LX'
-		SS.append(rename)
-		SEQ.append(ss[1])
-	buf = []
-	items = []
-	l_seen = 0
-	for count, (ss, aa) in enumerate(zip(SS, SEQ), 1):
-		buf.append((count, aa, ss))
-		if 'LX' in {ss, aa}:
-			l_seen += 1
-			if l_seen >= 3:
-				for count, aa, ss in buf:
-					line = [str(count), aa, ss, '.' if ss in {'HX', 'EX'} else 'R']
-					line = ' '.join(line)
-					items.append(line)
-				buf.clear()
-		else:
-			l_seen = 0
-			for count, aa, ss in buf:
-				line = [str(count), aa, ss, '.']
-				line = ' '.join(line)
-				items.append(line)
-			buf.clear()
-	if int(items[-1].split()[0]) != count:
-		line = [str(count), aa, ss, '.']
-		line = ' '.join(line)
-		items.append(line)
-	blueprint = open('blueprint', 'a')
-	for line in items:
-		blueprint.write(line+'\n')
-	blueprint.close()
 	# Flxbb
 	task = pyrosetta.rosetta.core.pack.task.TaskFactory()
 	movemap = MoveMap()
@@ -800,7 +758,6 @@ def MCflxbb(filename, relax_iters, kT, cycles, jobs, job_output):
 		RosettaDesign.apply(pose)
 		mc.recover_low(pose)
 		job.output_decoy(pose)
-	os.remove('blueprint')
 
 if __name__ == '__main__':
 #	MainProtocol(sys.argv[1], sys.argv[2])			# Try 10 iterations of this script and choose the structure with the lowest fragment RMSD (average<2 and max<5). Preferred command: python3 RosettaDesign.py flxbb FILENAME.pdb
