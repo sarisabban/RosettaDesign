@@ -717,8 +717,6 @@ def MCProtocol(filename, relax_iters , kT, cycles, jobs, job_output):
 def MCflxbb(filename, relax_iters, kT, cycles, jobs, job_output):
 	# Relax
 	pose = pose_from_pdb(filename)
-	starting_pose = Pose()
-	starting_pose.assign(pose)
 	scorefxn = get_fa_scorefxn()
 	relax = pyrosetta.rosetta.protocols.relax.FastRelax()
 	relax.set_scorefxn(scorefxn)
@@ -737,8 +735,10 @@ def MCflxbb(filename, relax_iters, kT, cycles, jobs, job_output):
 			Rpose_lowest.assign(Rpose_work)
 		else:
 			continue
-	pose.assign(Rpose_lowest)
 	# Flxbb
+	pose.assign(Rpose_lowest)
+	starting_pose = Pose()
+	starting_pose.assign(pose)
 	task = pyrosetta.rosetta.core.pack.task.TaskFactory()
 	movemap = MoveMap()
 	movemap.set_bb(True)
