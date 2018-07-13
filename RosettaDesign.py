@@ -737,6 +737,7 @@ def MCflxbb(filename, relax_iters, kT, cycles, jobs, job_output):
 			Rpose_lowest.assign(Rpose_work)
 		else:
 			continue
+	pose.assign(Rpose_lowest)
 	# Flxbb
 	task = pyrosetta.rosetta.core.pack.task.TaskFactory()
 	movemap = MoveMap()
