@@ -805,4 +805,4 @@ def MCflxbb(filename, relax_iters, kT, cycles, jobs, job_output):
 if __name__ == '__main__':
 #	MainProtocol(sys.argv[1], sys.argv[2])			# Try 10 iterations of this script and choose the structure with the lowest fragment RMSD (average<2 and max<5). Preferred command: python3 RosettaDesign.py flxbb FILENAME.pdb
 	MCProtocol(sys.argv[2], 50, 1.0, 10, 50, 'structure')	# Choose the lowest scoring structure (seems to work)
-#	MCflxbb(sys.argv[2], 50, 1.0, 10, 50, 'structure')	# 
+#	MCflxbb(sys.argv[2], 50, 1.0, 10, 50, 'structure')	# Choose the lowest scoring structure ()
