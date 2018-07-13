@@ -601,29 +601,6 @@ def MainProtocol(protocol, filename):
 	else:
 		print('Error in command string')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def MCProtocol(filename, relax_iters , kT, cycles, jobs, job_output):
 	'''
 	Performing flexible backbone RosettaDesign using the
@@ -825,15 +802,7 @@ def MCflxbb(filename, relax_iters, kT, cycles, jobs, job_output):
 		job.output_decoy(pose)
 	os.remove('blueprint')
 
-
-
-
-
-
-
-
 if __name__ == '__main__':
 	MainProtocol(sys.argv[1], sys.argv[2])	# Try 10 iterations of this script and choose the structure with the lowest fragment RMSD (average<2 and max<5). Preferred command: python3 RosettaDesign.py flxbb FILENAME.pdb
-
 #	MCProtocol('original.pdb', 1, 1.0, 1, 1, 'structure')
 #	MCflxbb('original.pdb', 1, 1.0, 1, 1, 'structure')
