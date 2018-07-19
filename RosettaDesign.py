@@ -588,7 +588,176 @@ class RosettaDesign():
 		pose.dump_pdb('structure.pdb')
 		os.remove('temp.pdb')
 
-def MainProtocol(protocol, filename):
+class MCRosettaDesign():
+	'''
+	This class preforms RosettaDesign either fixed backbone 
+	design (fixbb) or flexible backbone design (flxbb) using
+	the Monte Carlo method, generating many designed structures
+	thus it is best to select the lowest scoring structure.
+	'''
+	def __init__(self):
+		pass
+
+	def fixbb(self, filename, relax_iters, kT, cycles, jobs, job_output):
+		'''
+		Performs fixed backbone RosettaDesign using the
+		Monte Carlo method using the following sequence:
+		1. Relax
+		2. Fixed backbone design
+		'''
+		# Relax
+		pose = pose_from_pdb(filename)
+		scorefxn = get_fa_scorefxn()
+		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
+		relax.set_scorefxn(scorefxn)
+		Rscore_before = scorefxn(pose)
+		Rpose_work = Pose()
+		Rpose_lowest = Pose()
+		Rscores = []
+		Rscores.append(Rscore_before)
+		for nstruct in range(relax_iters):
+			Rpose_work.assign(pose)
+			relax.apply(Rpose_work)
+			Rscore_after = scorefxn(Rpose_work)
+			Rscores.append(Rscore_after)
+			if Rscore_after < Rscore_before:
+				Rscore_before = Rscore_after
+				Rpose_lowest.assign(Rpose_work)
+			else:
+				continue
+		# Fixbb
+		pose.assign(Rpose_lowest)
+		starting_pose = Pose()
+		starting_pose.assign(pose)
+		packtask = standard_packer_task(pose)
+		fixbb = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn, packtask)
+		# Monte carlo mothod
+		mc = MonteCarlo(pose, scorefxn, kT)
+		trial = TrialMover(fixbb, mc)
+		RosettaDesign = RepeatMover(trial, cycles)
+		job = PyJobDistributor(job_output, jobs, scorefxn)
+		job.native_pose = starting_pose
+		while not job.job_complete:
+			pose.assign(starting_pose)
+			mc.reset(pose)
+			RosettaDesign.apply(pose)
+			mc.recover_low(pose)
+			job.output_decoy(pose)
+
+	def flxbb(self, filename, relax_iters, kT, cycles, jobs, job_output):
+		'''
+		Performs flexible backbone RosettaDesign using the
+		Monte Carlo method using the following sequence:
+		1. Big relax
+		2. Relax
+		3. BluePrintBDR loop remodeling
+		4. Flexible backbone design
+		5. Refine layers
+		'''
+		# Big relax
+		pose = pose_from_pdb(filename)
+		scorefxn = get_fa_scorefxn()
+		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
+		relax.set_scorefxn(scorefxn)
+		Rscore_before = scorefxn(pose)
+		Rpose_work = Pose()
+		Rpose_lowest = Pose()
+		Rscores = []
+		Rscores.append(Rscore_before)
+		for nstruct in range(relax_iters):
+			Rpose_work.assign(pose)
+			relax.apply(Rpose_work)
+			Rscore_after = scorefxn(Rpose_work)
+			Rscores.append(Rscore_after)
+			if Rscore_after < Rscore_before:
+				Rscore_before = Rscore_after
+				Rpose_lowest.assign(Rpose_work)
+			else:
+				continue
+		# Generate blueprint file
+		structure = Bio.PDB.PDBParser(QUIET=True).get_structure('{}'.format(filename), filename)
+		dssp = Bio.PDB.DSSP(structure[0], filename)
+		SS = []
+		SEQ = []
+		for ss in dssp:
+			if ss[2] == 'G' or ss[2] == 'H' or ss[2] == 'I':
+				rename = 'HX'
+			elif ss[2] == 'B' or ss[2] == 'E':
+				rename = 'EX'
+			else:
+				rename = 'LX'
+			SS.append(rename)
+			SEQ.append(ss[1])
+		buf = []
+		items = []
+		l_seen = 0
+		for count, (ss, aa) in enumerate(zip(SS, SEQ), 1):
+			buf.append((count, aa, ss))
+			if 'LX' in {ss, aa}:
+				l_seen += 1
+				if l_seen >= 3:
+					for count, aa, ss in buf:
+						line = [str(count), aa, ss, '.' if ss in {'HX', 'EX'} else 'R']
+						line = ' '.join(line)
+						items.append(line)
+					buf.clear()
+			else:
+				l_seen = 0
+				for count, aa, ss in buf:
+					line = [str(count), aa, ss, '.']
+					line = ' '.join(line)
+					items.append(line)
+				buf.clear()
+		if int(items[-1].split()[0]) != count:
+			line = [str(count), aa, ss, '.']
+			line = ' '.join(line)
+			items.append(line)
+		blueprint = open('blueprint', 'a')
+		for line in items:
+			blueprint.write(line+'\n')
+		blueprint.close()
+		# RosettaDesign: Relax, BluePrintBDR, Flxbb
+		pose.assign(Rpose_lowest)
+		starting_pose = Pose()
+		starting_pose.assign(pose)
+		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
+		relax.set_scorefxn(scorefxn)
+		BDR = pyrosetta.rosetta.protocols.fldsgn.BluePrintBDR()
+		BDR.num_fragpick(200)
+		BDR.use_fullmer(True)
+		BDR.use_sequence_bias(False)
+		BDR.max_linear_chainbreak(0.07)
+		BDR.ss_from_blueprint(True)
+		BDR.dump_pdb_when_fail('')
+		BDR.set_constraints_NtoC(-1.0)
+		BDR.use_abego_bias(True)
+		BDR.set_blueprint('blueprint')
+		task = pyrosetta.rosetta.core.pack.task.TaskFactory()
+		movemap = MoveMap()
+		movemap.set_bb(True)
+		movemap.set_chi(True)
+		flxbb = pyrosetta.rosetta.protocols.denovo_design.movers.FastDesign()
+		flxbb.set_task_factory(task)
+		flxbb.set_movemap(movemap)
+		flxbb.set_scorefxn(scorefxn)
+		sequence = SequenceMover()
+		sequence.add_mover(relax)
+		sequence.add_mover(BDR)
+		sequence.add_mover(flxbb)
+		mc = MonteCarlo(pose, scorefxn, kT)
+		trial = TrialMover(sequence, mc)
+		RosettaDesign = RepeatMover(trial, cycles)
+		job = PyJobDistributor(job_output, jobs, scorefxn)
+		job.native_pose = starting_pose
+		while not job.job_complete:
+			pose.assign(starting_pose)
+			mc.reset(pose)
+			RosettaDesign.apply(pose)
+			mc.recover_low(pose)
+			job.output_decoy(pose)
+		os.remove('blueprint')
+
+def Protocol(protocol, filename):
 	RD = RosettaDesign()
 	if protocol == 'fixbb':
 		RD.BDR(filename, 200)
@@ -601,166 +770,28 @@ def MainProtocol(protocol, filename):
 	else:
 		print('Error in command string')
 
-def MCProtocol(filename, relax_iters , kT, cycles, jobs, job_output):
-	'''
-	Performing flexible backbone RosettaDesign using the
-	Monte Carlo method using the following sequence:
-	1. Big relax
-	2. Relax
-	3. BluePrintBDR loop remodeling
-	4. Flexible backbone design
-	5. Refine layers
-	'''
-	# Big relax
-	pose = pose_from_pdb(filename)
-	scorefxn = get_fa_scorefxn()
-	relax = pyrosetta.rosetta.protocols.relax.FastRelax()
-	relax.set_scorefxn(scorefxn)
-	Rscore_before = scorefxn(pose)
-	Rpose_work = Pose()
-	Rpose_lowest = Pose()
-	Rscores = []
-	Rscores.append(Rscore_before)
-	for nstruct in range(relax_iters):
-		Rpose_work.assign(pose)
-		relax.apply(Rpose_work)
-		Rscore_after = scorefxn(Rpose_work)
-		Rscores.append(Rscore_after)
-		if Rscore_after < Rscore_before:
-			Rscore_before = Rscore_after
-			Rpose_lowest.assign(Rpose_work)
-		else:
-			continue
-	# Generate blueprint file
-	structure = Bio.PDB.PDBParser(QUIET=True).get_structure('{}'.format(filename), filename)
-	dssp = Bio.PDB.DSSP(structure[0], filename)
-	SS = []
-	SEQ = []
-	for ss in dssp:
-		if ss[2] == 'G' or ss[2] == 'H' or ss[2] == 'I':
-			rename = 'HX'
-		elif ss[2] == 'B' or ss[2] == 'E':
-			rename = 'EX'
-		else:
-			rename = 'LX'
-		SS.append(rename)
-		SEQ.append(ss[1])
-	buf = []
-	items = []
-	l_seen = 0
-	for count, (ss, aa) in enumerate(zip(SS, SEQ), 1):
-		buf.append((count, aa, ss))
-		if 'LX' in {ss, aa}:
-			l_seen += 1
-			if l_seen >= 3:
-				for count, aa, ss in buf:
-					line = [str(count), aa, ss, '.' if ss in {'HX', 'EX'} else 'R']
-					line = ' '.join(line)
-					items.append(line)
-				buf.clear()
-		else:
-			l_seen = 0
-			for count, aa, ss in buf:
-				line = [str(count), aa, ss, '.']
-				line = ' '.join(line)
-				items.append(line)
-			buf.clear()
-	if int(items[-1].split()[0]) != count:
-		line = [str(count), aa, ss, '.']
-		line = ' '.join(line)
-		items.append(line)
-	blueprint = open('blueprint', 'a')
-	for line in items:
-		blueprint.write(line+'\n')
-	blueprint.close()
-	# RosettaDesign: Relax, BluePrintBDR, Flxbb
-	pose.assign(Rpose_lowest)
-	starting_pose = Pose()
-	starting_pose.assign(pose)
-	relax = pyrosetta.rosetta.protocols.relax.FastRelax()
-	relax.set_scorefxn(scorefxn)
-	BDR = pyrosetta.rosetta.protocols.fldsgn.BluePrintBDR()
-	BDR.num_fragpick(200)
-	BDR.use_fullmer(True)
-	BDR.use_sequence_bias(False)
-	BDR.max_linear_chainbreak(0.07)
-	BDR.ss_from_blueprint(True)
-	BDR.dump_pdb_when_fail('')
-	BDR.set_constraints_NtoC(-1.0)
-	BDR.use_abego_bias(True)
-	BDR.set_blueprint('blueprint')
-	task = pyrosetta.rosetta.core.pack.task.TaskFactory()
-	movemap = MoveMap()
-	movemap.set_bb(True)
-	movemap.set_chi(True)
-	flxbb = pyrosetta.rosetta.protocols.denovo_design.movers.FastDesign()
-	flxbb.set_task_factory(task)
-	flxbb.set_movemap(movemap)
-	flxbb.set_scorefxn(scorefxn)
-	sequence = SequenceMover()
-	sequence.add_mover(relax)
-	sequence.add_mover(BDR)
-	sequence.add_mover(flxbb)
-	mc = MonteCarlo(pose, scorefxn, kT)
-	trial = TrialMover(sequence, mc)
-	RosettaDesign = RepeatMover(trial, cycles)
-	job = PyJobDistributor(job_output, jobs, scorefxn)
-	job.native_pose = starting_pose
-	while not job.job_complete:
-		pose.assign(starting_pose)
-		mc.reset(pose)
-		RosettaDesign.apply(pose)
-		mc.recover_low(pose)
-		job.output_decoy(pose)
-	os.remove('blueprint')
-
-def MCflxbb(filename, relax_iters, kT, cycles, jobs, job_output):
-	# Relax
-	pose = pose_from_pdb(filename)
-	scorefxn = get_fa_scorefxn()
-	relax = pyrosetta.rosetta.protocols.relax.FastRelax()
-	relax.set_scorefxn(scorefxn)
-	Rscore_before = scorefxn(pose)
-	Rpose_work = Pose()
-	Rpose_lowest = Pose()
-	Rscores = []
-	Rscores.append(Rscore_before)
-	for nstruct in range(relax_iters):
-		Rpose_work.assign(pose)
-		relax.apply(Rpose_work)
-		Rscore_after = scorefxn(Rpose_work)
-		Rscores.append(Rscore_after)
-		if Rscore_after < Rscore_before:
-			Rscore_before = Rscore_after
-			Rpose_lowest.assign(Rpose_work)
-		else:
-			continue
-	# Flxbb
-	pose.assign(Rpose_lowest)
-	starting_pose = Pose()
-	starting_pose.assign(pose)
-	task = pyrosetta.rosetta.core.pack.task.TaskFactory()
-	movemap = MoveMap()
-	movemap.set_bb(True)
-	movemap.set_chi(True)
-	flxbb = pyrosetta.rosetta.protocols.denovo_design.movers.FastDesign()
-	flxbb.set_task_factory(task)
-	flxbb.set_movemap(movemap)
-	flxbb.set_scorefxn(scorefxn)
-	# Monte carlo mothod
-	mc = MonteCarlo(pose, scorefxn, kT)
-	trial = TrialMover(flxbb, mc)
-	RosettaDesign = RepeatMover(trial, cycles)
-	job = PyJobDistributor(job_output, jobs, scorefxn)
-	job.native_pose = starting_pose
-	while not job.job_complete:
-		pose.assign(starting_pose)
-		mc.reset(pose)
-		RosettaDesign.apply(pose)
-		mc.recover_low(pose)
-		job.output_decoy(pose)
+def MCProtocol(protocol, filename):
+	RD = MCRosettaDesign()
+	if protocol == 'fixbb':
+		RD.fixbb(filename, 50, 1.0, 10, 50, 'fixbb')
+	elif protocol == 'flxbb':
+		RD.flxbb(filename, 50, 1.0, 10, 50, 'flxbb')
+	else:
+		print('Error in command string')
+	ScoreFile = open('{}.fasc'.format(protocol), 'r')
+	items = {}
+	for line in ScoreFile:
+		line = line.split()
+		try:
+			filename = line[1]
+			score = float(line[3])
+			items[filename] = score
+		except:
+			pass
+	LowestScoringFilename = (min(items, key=items.get))
+	RD = RosettaDesign()
+	RD.Refine(LowestScoringFilename, 50)
 
 if __name__ == '__main__':
-#	MainProtocol(sys.argv[1], sys.argv[2])			# Try 10 iterations of this script and choose the structure with the lowest fragment RMSD (average<2 and max<4). Preferred command: python3 RosettaDesign.py flxbb FILENAME.pdb
-	MCProtocol(sys.argv[2], 50, 1.0, 10, 50, 'structure')	# Choose the lowest scoring structure (seems to work)
-#	MCflxbb(sys.argv[2], 50, 1.0, 10, 50, 'structure')	# Choose the lowest scoring structure ()
+#	Protocol(sys.argv[1], sys.argv[2])
+	MCProtocol(sys.argv[1], sys.argv[2])
