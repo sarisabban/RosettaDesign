@@ -649,10 +649,10 @@ class MCRosettaDesign():
 		Performs flexible backbone RosettaDesign using the
 		Monte Carlo method using the following sequence:
 		1. Big relax
-		2. Relax
-		3. BluePrintBDR loop remodeling
-		4. Flexible backbone design (by SASA layers)
-		5. Idealise
+		2. BluePrintBDR loop remodeling
+		3. Flexible backbone design (by SASA layers)
+		4. Idealise
+		5. Relax
 		'''
 		# Big relax
 		pose = pose_from_pdb(filename)
