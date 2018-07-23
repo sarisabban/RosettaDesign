@@ -639,9 +639,9 @@ class MCRosettaDesign():
 		job.native_pose = starting_pose
 		while not job.job_complete:
 			pose.assign(starting_pose)
-			mc.reset(pose)
+			#mc.reset(pose)
 			RosettaDesign.apply(pose)
-			mc.recover_low(pose)
+			#mc.recover_low(pose)
 			job.output_decoy(pose)
 
 	def flxbb(self, filename, relax_iters, kT, cycles, jobs, job_output):
@@ -959,9 +959,9 @@ class MCRosettaDesign():
 		job.native_pose = starting_pose
 		while not job.job_complete:
 			pose.assign(starting_pose)
-			mc.reset(pose)
+			#mc.reset(pose)
 			RosettaDesign.apply(pose)
-			mc.recover_low(pose)
+			#mc.recover_low(pose)
 			job.output_decoy(pose)
 		os.remove('blueprint')
 		os.remove('resfile')
