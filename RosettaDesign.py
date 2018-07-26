@@ -10,7 +10,7 @@ init()
 
 class RosettaDesign():
 	'''
-	This class preforms RosettaDesign either fixed backbone 
+	This class preforms RosettaDesign either fixed backbone
 	design (fixbb) or flexible backbone design (flxbb).
 	It is preferred to perform the design many times and 
 	select the best (lowest) scoring structure.
