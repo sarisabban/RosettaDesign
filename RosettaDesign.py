@@ -598,42 +598,237 @@ class MCRosettaDesign():
 	def __init__(self):
 		pass
 
-	def fixbb(self, filename, relax_iters, kT, cycles, jobs, job_output):
+	def fixbb(self, filename, kT, cycles, jobs, job_output):
 		'''
 		Performs fixed backbone RosettaDesign using the
 		Monte Carlo method using the following sequence:
 		1. Relax
-		2. Fixed backbone design
+		2. Fixed backbone design (by SASA layers)
 		'''
-		# Relax
+		# Generate resfile
+		parser = Bio.PDB.PDBParser()
+		structure = parser.get_structure('{}'.format(filename), filename)
+		dssp = Bio.PDB.DSSP(structure[0], filename, acc_array='Wilke')
+		sasalist = []
+		for x in dssp:
+			if x[1] == 'A':
+				sasa = 129*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'V':
+				sasa = 174*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'I':
+				sasa = 197*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'L':
+				sasa = 201*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'M':
+				sasa = 224*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'P':
+				sasa = 159*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'Y':
+				sasa = 263*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'F':
+				sasa = 240*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'W':
+				sasa = 285*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'R':
+				sasa = 274*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'N':
+				sasa = 195*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'C':
+				sasa = 167*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'Q':
+				sasa = 225*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'E':
+				sasa = 223*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'G':
+				sasa = 104*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'H':
+				sasa = 224*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'K':
+				sasa = 236*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'S':
+				sasa = 155*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'T':
+				sasa = 172*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			elif x[1] == 'D':
+				sasa = 193*(x[3])
+				if sasa <= 25:
+					sasa = 'C'
+				elif 25 < sasa < 40:
+					sasa = 'B'
+				elif sasa >= 40:
+					sasa = 'S'
+			if x[2] == 'G' or x[2] == 'H' or x[2] == 'I':
+				ss = 'H'
+			elif x[2] == 'B' or x[2] == 'E':
+				ss = 'S'
+			elif x[2] == 'S' or x[2] == 'T' or x[2] == '-':
+				ss = 'L'
+			sasalist.append((x[0], x[1], ss, sasa))
+		resfile = open('resfile', 'a')
+		resfile.write('NATRO\nSTART\n')
+		for n, r, a, s in sasalist:
+			if s == 'S' and a == 'L':
+				line = '{} A PIKAA PGNQSTDERKH\n'.format(n)
+				resfile.write(line)
+			elif s == 'S' and a == 'H':
+				line = '{} A PIKAA QEKH\n'.format(n)
+				resfile.write(line)
+			elif s == 'S' and a == 'S':
+				line = '{} A PIKAA QTY\n'.format(n)
+				resfile.write(line)
+			elif s == 'B' and a == 'L':
+				line = '{} A PIKAA AVILFYWGNQSTPDEKR\n'.format(n)
+				resfile.write(line)
+			elif s == 'B' and a == 'H':
+				line = '{} A PIKAA AVILWQEKFM\n'.format(n)
+				resfile.write(line)
+			elif s == 'B' and a == 'S':
+				line = '{} A PIKAA AVILFYWQTM\n'.format(n)
+				resfile.write(line)
+			elif s == 'C' and a == 'L':
+				line = '{} A PIKAA AVILPFWM\n'.format(n)
+				resfile.write(line)
+			elif s == 'C' and a == 'H':
+				line = '{} A PIKAA AVILFWM\n'.format(n)
+				resfile.write(line)
+			elif s == 'C' and a == 'S':
+				line = '{} A PIKAA AVILFWM\n'.format(n)
+				resfile.write(line)
+		resfile.close()
+		# RosettaDesign: Relax Fixbb, Relax
 		pose = pose_from_pdb(filename)
+		starting_pose = Pose()
+		starting_pose.assign(pose)
 		scorefxn = get_fa_scorefxn()
 		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
 		relax.set_scorefxn(scorefxn)
-		Rscore_before = scorefxn(pose)
-		Rpose_work = Pose()
-		Rpose_lowest = Pose()
-		Rscores = []
-		Rscores.append(Rscore_before)
-		for nstruct in range(relax_iters):
-			Rpose_work.assign(pose)
-			relax.apply(Rpose_work)
-			Rscore_after = scorefxn(Rpose_work)
-			Rscores.append(Rscore_after)
-			if Rscore_after < Rscore_before:
-				Rscore_before = Rscore_after
-				Rpose_lowest.assign(Rpose_work)
-			else:
-				continue
-		# Fixbb
-		pose.assign(Rpose_lowest)
-		starting_pose = Pose()
-		starting_pose.assign(pose)
 		packtask = standard_packer_task(pose)
+		pyrosetta.rosetta.core.pack.task.parse_resfile(pose, packtask, 'resfile')
 		fixbb = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn, packtask)
-		# Monte carlo mothod
+		sequence = SequenceMover()
+		sequence.add_mover(relax)
+		sequence.add_mover(fixbb)
+		sequence.add_mover(relax)
+#		sequence.add_mover(fixbb)
+#		sequence.add_mover(relax)
+#		sequence.add_mover(fixbb)
+#		sequence.add_mover(relax)
 		mc = MonteCarlo(pose, scorefxn, kT)
-		trial = TrialMover(fixbb, mc)
+		trial = TrialMover(sequence, mc)
 		RosettaDesign = RepeatMover(trial, cycles)
 		job = PyJobDistributor(job_output, jobs, scorefxn)
 		job.native_pose = starting_pose
@@ -643,6 +838,7 @@ class MCRosettaDesign():
 			RosettaDesign.apply(pose)
 			mc.recover_low(pose)
 			job.output_decoy(pose)
+		os.remove('resfile')
 
 	def flxbb(self, filename, kT, cycles, jobs, job_output):
 		'''
@@ -972,7 +1168,7 @@ def Protocol(protocol, filename):
 def MCProtocol(protocol, filename):
 	RD = MCRosettaDesign()
 	if protocol == 'fixbb':
-		RD.fixbb(filename, 50, 1.0, 10, 50, 'fixbb')
+		RD.fixbb(filename, 1.0, 10, 50, 'fixbb')
 	elif protocol == 'flxbb':
 		RD.flxbb(filename, 1.0, 10, 50, 'flxbb')
 	else:
