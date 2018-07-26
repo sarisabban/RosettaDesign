@@ -644,36 +644,16 @@ class MCRosettaDesign():
 			mc.recover_low(pose)
 			job.output_decoy(pose)
 
-	def flxbb(self, filename, relax_iters, kT, cycles, jobs, job_output):
+	def flxbb(self, filename, kT, cycles, jobs, job_output):
 		'''
 		Performs flexible backbone RosettaDesign using the
 		Monte Carlo method using the following sequence:
-		1. Big relax
+		1. Relax
 		2. BluePrintBDR loop remodeling
 		3. Flexible backbone design (by SASA layers)
 		4. Idealise
 		5. Relax
 		'''
-		# Big relax
-		pose = pose_from_pdb(filename)
-		scorefxn = get_fa_scorefxn()
-		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
-		relax.set_scorefxn(scorefxn)
-		Rscore_before = scorefxn(pose)
-		Rpose_work = Pose()
-		Rpose_lowest = Pose()
-		Rscores = []
-		Rscores.append(Rscore_before)
-		for nstruct in range(relax_iters):
-			Rpose_work.assign(pose)
-			relax.apply(Rpose_work)
-			Rscore_after = scorefxn(Rpose_work)
-			Rscores.append(Rscore_after)
-			if Rscore_after < Rscore_before:
-				Rscore_before = Rscore_after
-				Rpose_lowest.assign(Rpose_work)
-			else:
-				continue
 		# Generate blueprint file
 		structure = Bio.PDB.PDBParser(QUIET=True).get_structure('{}'.format(filename), filename)
 		dssp = Bio.PDB.DSSP(structure[0], filename)
@@ -920,10 +900,11 @@ class MCRosettaDesign():
 				line = '{} A PIKAA AVILFWM\n'.format(n)
 				resfile.write(line)
 		resfile.close()
-		# RosettaDesign: Relax, BluePrintBDR, Flxbb
-		pose.assign(Rpose_lowest)
+		# RosettaDesign: Relax, BluePrintBDR, Flxbb, Idealize, Relax
+		pose = pose_from_pdb(filename)
 		starting_pose = Pose()
 		starting_pose.assign(pose)
+		scorefxn = get_fa_scorefxn()
 		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
 		relax.set_scorefxn(scorefxn)
 		BDR = pyrosetta.rosetta.protocols.fldsgn.BluePrintBDR()
@@ -952,6 +933,15 @@ class MCRosettaDesign():
 		sequence.add_mover(BDR)
 		sequence.add_mover(flxbb)
 		sequence.add_mover(ideal)
+		sequence.add_mover(relax)
+#		sequence.add_mover(BDR)
+#		sequence.add_mover(flxbb)
+#		sequence.add_mover(ideal)
+#		sequence.add_mover(relax)
+#		sequence.add_mover(BDR)
+#		sequence.add_mover(flxbb)
+#		sequence.add_mover(ideal)
+#		sequence.add_mover(relax)
 		mc = MonteCarlo(pose, scorefxn, kT)
 		trial = TrialMover(sequence, mc)
 		RosettaDesign = RepeatMover(trial, cycles)
@@ -984,7 +974,7 @@ def MCProtocol(protocol, filename):
 	if protocol == 'fixbb':
 		RD.fixbb(filename, 50, 1.0, 10, 50, 'fixbb')
 	elif protocol == 'flxbb':
-		RD.flxbb(filename, 50, 1.0, 10, 50, 'flxbb')
+		RD.flxbb(filename, 1.0, 10, 50, 'flxbb')
 	else:
 		print('Error in command string')
 
