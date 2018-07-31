@@ -8,6 +8,22 @@ from pyrosetta import *
 from pyrosetta.toolbox import *
 init()
 
+def BUH(filename):
+	'''
+	Prints out all the residues form a structure
+	with unsatisfied hydrogen bonds.
+	'''
+	import json
+	pose = pose_from_pdb(filename)
+	scorefxn = get_fa_scorefxn()
+	scorefxn(pose)
+	bupc = pyrosetta.rosetta.protocols.simple_pose_metric_calculators.BuriedUnsatisfiedPolarsCalculator('default', 'default')
+	residues = bupc.get('residue_bur_unsat_polars', pose)
+	buhs_for_each_res = json.loads(bupc.get('residue_bur_unsat_polars', pose))
+	for i in range(pose.size()):
+		if buhs_for_each_res[i] > 0:
+			print('{0}{1}: {2}'.format(pose.pdb_info().chain(i + 1), pose.pdb_info().number(i + 1), buhs_for_each_res[i]))
+
 class RosettaDesign():
 	'''
 	This class preforms RosettaDesign either fixed backbone
