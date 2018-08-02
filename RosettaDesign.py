@@ -1176,9 +1176,9 @@ def Protocol(protocol, filename):
 def MCProtocol(protocol, filename):
 	RD = MCRosettaDesign()
 	if protocol == 'fixbb':
-		RD.fixbb(filename, 1.0, 10, 50, 'fixbb')
+		RD.fixbb(filename, 1.0, 10, 100, 'fixbb')
 	elif protocol == 'flxbb':
-		RD.flxbb(filename, 1.0, 10, 50, 'flxbb')
+		RD.flxbb(filename, 1.0, 10, 100, 'flxbb')
 	else:
 		print('Error in command string')
 
