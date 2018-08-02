@@ -3,10 +3,17 @@ RosettaDesign using PyRosetta
 
 ## Decription
 This is a python script that allows fixed backbone (fixbb) or flexible backbone (flxbb) design of a protein in PyRosetta using any of the following protocols:
+For Fixbb:
+1. Relax structure.
+2. Fixbb (designs the whole protein keeping the backbone fixed)
+3. Relax structure.
+
+For Flxbb (recommended):
 1. Relax structure.
 2. Remodel loops.
-3. Fixbb (designs the whole protein keeping the backbone fixed) or flxbb (designs the whole protein while allowing for a flexible backbone), with flxbb being the reccomended protocol.
-5. Refine layer: Make sure all protein layers and secondary structures have the correct amino acids.
+3. Flxbb (designs the whole protein while allowing for a flexible backbone).
+4. Refine layer: Make sure all protein layers and secondary structures have the correct amino acids.
+5. Relax designed structure.
 This script has only been tested in GNU/Linux.
 
 ## Requirements
@@ -26,7 +33,7 @@ This script has only been tested in GNU/Linux.
 * PROTOCOL = Will be either fixbb (for fix backbone design) or flxbb (for flexible backbone design)
 * FILENAME.pdb = The structure to be designed in PDB format
 
-5. The computation takes around 24-48 hours (fixbb) or 72-120 hours (flxbb) depending on the protein's size and computer resources.
-6. The script will preform 50 relax operations (taking the lowest scoring structure) then 100 design operations (taking the lowest scoring structure).
-7. The script outputs only one file which is the final designed structure named *structure.pdb*.
-8. Use this [Rosetta Abinitio](https://github.com/sarisabban/RosettaAbinitio) script to predict the fold of your new desgined structure.
+5. The computation takes around ~100 hours (fixbb) or ~200 hours (flxbb) depending on the protein's size and computer resources.
+6. The script will output around 100 structures and a score file *.fasc*, choose the lowest scoring structure.
+7. Use this [Rosetta Abinitio](https://github.com/sarisabban/RosettaAbinitio) script to predict the fold of your new desgined lowest scoring structure.
+8. NOTE: Some backbones are not possible to simulate their folding (*Abinitio*) before/after design even if the designing step was successful, this is as a result of the fragments used to to predict the structure's fold not being optimal and not an issue with the design algorithm, so far there is no way arround this (this is a limitation in Rosetta/PyRosetta).
