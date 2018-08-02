@@ -3,6 +3,7 @@ RosettaDesign using PyRosetta
 
 ## Decription
 This is a python script that allows fixed backbone (fixbb) or flexible backbone (flxbb) design of a protein in PyRosetta using any of the following protocols:
+
 For Fixbb:
 1. Relax structure.
 2. Fixbb (designs the whole protein keeping the backbone fixed)
