@@ -620,6 +620,7 @@ class MCRosettaDesign():
 		Monte Carlo method using the following sequence:
 		1. Relax
 		2. Fixed backbone design (by SASA layers)
+		3. Relax
 		'''
 		# Generate resfile
 		parser = Bio.PDB.PDBParser()
