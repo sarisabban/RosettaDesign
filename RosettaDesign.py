@@ -218,7 +218,7 @@ class RosettaDesign(object):
 		flxbb.set_task_factory(task)
 		flxbb.set_movemap(movemap)
 		flxbb.set_scorefxn(scorefxn)
-		job = PyJobDistributor('flxbb', 10, scorefxn)
+		job = PyJobDistributor('flxbb', 100, scorefxn)
 		job.native_pose = starting_pose
 		while not job.job_complete:
 			pose.assign(starting_pose)
