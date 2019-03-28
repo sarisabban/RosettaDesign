@@ -3,6 +3,7 @@
 import os
 import sys
 import json
+import glob
 import Bio.PDB
 import argparse
 from pyrosetta import *
@@ -178,8 +179,7 @@ class RosettaDesign(object):
 				score = score2
 				name = line.get('decoy')
 		os.system('mv {} structure.pdb'.format(name))
-		try:	os.system('rm fixbb_*')
-		except:	os.system('rm fixbb_*')
+		for f in glob.glob('f[il]xbb_*'): os.remove(f)
 
 	def fixbb(self):
 		'''
