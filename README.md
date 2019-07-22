@@ -20,7 +20,7 @@ This script has only been tested in GNU/Linux.
 1. You will need to download and compile [PyRosetta](http://www.pyrosetta.org/).
 2. You will also need to install Biopython and dssp to run the BLAST operation after the RosettaDesign protocol, install using the following command:
 
-`sudo apt install python3-biopython dssp`
+`sudo apt install python3-biopython dssp gnuplot`
 
 ## How to use
 1. It is best if you design proteins with a single chain that is between 80 - 150 amino acids, any shorter or longer will make it difficult to evaluate the design using the [Rosetta Abinitio Folding Simulation](https://github.com/sarisabban/RosettaAbinitio).
@@ -37,3 +37,8 @@ This script has only been tested in GNU/Linux.
 6. The script will output around 100 structures and a score file *.fasc*, then it will auto choose the lowest energy scoring structure and delete all the others, including the scoring file.
 7. Use this [Rosetta Abinitio](https://github.com/sarisabban/RosettaAbinitio) script to predict the fold of the new desgined lowest scoring structure.
 8. NOTE: Some backbones are not possible to simulate their folding (*Abinitio*) before/after design even if the designing step was successful, this is as a result of the fragments used to to predict the structure's fold not being optimal and not an issue with the design algorithm, so far there is no way arround this (this is a limitation in Rosetta/PyRosetta).
+9. Generate fragments from the [Robetta server](http://robetta.org/) using this command:
+
+`python3 Fragments.py FILENAME.pdb USERNAME`
+
+This will generate and download the nessesary files to run an *Abinitio* simulation: FILENAME.pdb, structure.fasta, frags.200.3mers, frags.200.9mers, pre.psipred.ss2, it will also calculate the quality of the fragments and plot them in the file plot_frag.pdf.

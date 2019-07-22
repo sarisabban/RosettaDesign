@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/ python3
 
 import os
 import sys
@@ -8,7 +8,15 @@ import Bio.PDB
 import argparse
 from pyrosetta import *
 from pyrosetta.toolbox import *
-init()
+init('''
+	-ex1 -ex2
+	-out:level 0
+	-use_input_sc
+	-no_his_his_pairE
+	-extrachi_cutoff 1
+	-multi_cool_annealer 10
+	-score:weights design_hpatch.wts
+	''')
 
 parser = argparse.ArgumentParser(description='RosettaDesign')
 parser.add_argument('-i', '--fixbb', nargs='+', help='Performs fixed-backbone design')
@@ -128,8 +136,8 @@ class RosettaDesign(object):
 			elif x[2] == 'B' or x[2] == 'E':				ss = 'S'
 			elif x[2] == 'S' or x[2] == 'T' or x[2] == '-':	ss = 'L'
 			sasalist.append((x[0], x[1], ss, sasa))
-		resfile = open('resfile', 'a')
-		resfile.write('NATRO\nSTART\n')
+		resfile = open('.resfile', 'a')
+		resfile.write('ALLAA\nEX 1\nEX 2\nUSE_INPUT_SC\nSTART\n')
 		for n, r, a, s in sasalist:
 			if s == 'S' and a == 'L':
 				line = '{} A PIKAA PGNQSTDERKH\n'.format(n)
@@ -162,7 +170,7 @@ class RosettaDesign(object):
 		self.SASA = sasalist
 	def __del__(self):
 		''' Remove the resfile '''
-		os.remove('resfile')
+		os.remove('.resfile')
 		for f in glob.glob('f[il]xbb.fasc'): os.remove(f)
 	def choose(self):
 		''' Choose the lowest scoring structure '''
@@ -191,7 +199,7 @@ class RosettaDesign(object):
 		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
 		relax.set_scorefxn(scorefxn)
 		packtask = standard_packer_task(pose)
-		pyrosetta.rosetta.core.pack.task.parse_resfile(pose, packtask, 'resfile')
+		#pyrosetta.rosetta.core.pack.task.parse_resfile(pose, packtask, 'resfile')
 		fixbb = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn, packtask, 10)
 		job = PyJobDistributor('fixbb', 100, scorefxn)
 		job.native_pose = starting_pose
@@ -214,7 +222,7 @@ class RosettaDesign(object):
 		scorefxn = get_fa_scorefxn()
 		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
 		relax.set_scorefxn(scorefxn)
-		resfile = rosetta.core.pack.task.operation.ReadResfile('resfile')
+		#resfile = rosetta.core.pack.task.operation.ReadResfile('resfile')
 		task = pyrosetta.rosetta.core.pack.task.TaskFactory()
 		task.push_back(resfile)
 		movemap = MoveMap()
