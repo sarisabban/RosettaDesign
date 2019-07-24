@@ -250,9 +250,6 @@ AFTER_FUNCTION QUADRATIC
 		amino acid sequence while maintaining a fixed backbone.
 		Generates the structure.pdb file.
 		'''
-		#packtask = standard_packer_task(self.pose)
-		#pyrosetta.rosetta.core.pack.task.parse_resfile(self.pose, packtask, '.resfile')
-		#fixbb = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(self.scorefxn_G, packtask, 10)
 		resfile = pyrosetta.rosetta.core.pack.task.operation.ReadResfile('.resfile')
 		task = pyrosetta.rosetta.core.pack.task.TaskFactory()
 		task.push_back(resfile)
@@ -264,14 +261,13 @@ AFTER_FUNCTION QUADRATIC
 		fixbb.set_movemap(movemap)
 		fixbb.set_scorefxn(self.scorefxn_G)
 		self.relax.apply(self.pose)
-		job = PyJobDistributor('fixbb', 1, self.scorefxn)
+		job = PyJobDistributor('fixbb', 100, self.scorefxn)
 		job.native_pose = self.starting_pose
 		while not job.job_complete:
 			self.pose.assign(self.starting_pose)
 			fixbb.apply(self.pose)
 			self.relax.apply(self.pose)
 			job.output_decoy(self.pose)
-		#self.choose()
 	def flxbb(self):
 		'''
 		Performs the RosettaDesign protocol to change a structure's
@@ -289,14 +285,13 @@ AFTER_FUNCTION QUADRATIC
 		flxbb.set_movemap(movemap)
 		flxbb.set_scorefxn(self.scorefxn_G)
 		self.relax.apply(self.pose)
-		job = PyJobDistributor('flxbb', 1, self.scorefxn)
+		job = PyJobDistributor('flxbb', 100, self.scorefxn)
 		job.native_pose = self.starting_pose
 		while not job.job_complete:
 			self.pose.assign(self.starting_pose)
 			flxbb.apply(self.pose)
 			self.relax.apply(self.pose)
 			job.output_decoy(self.pose)
-		#self.choose()
 
 def main():
 	if args.fixbb:
