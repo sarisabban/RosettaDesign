@@ -33,11 +33,11 @@ This script has only been tested in GNU/Linux.
 * PROTOCOL = Will be either --fixbb (for fix backbone design) or --flxbb (for flexible backbone design)
 * FILENAME.pdb = The structure to be designed in PDB format
 
-5. The computation takes around ~100 hours (fixbb) or ~200 hours (flxbb) depending on the protein's size and computer resources.
-6. The script will output around 100 structures and a score file *.fasc*, then it will auto choose the lowest energy scoring structure and delete all the others, including the scoring file.
-7. Use this [Rosetta Abinitio](https://github.com/sarisabban/RosettaAbinitio) script to predict the fold of the new desgined lowest scoring structure.
-8. NOTE: Some backbones are not possible to simulate their folding (*Abinitio*) before/after design even if the designing step was successful, this is as a result of the fragments used to to predict the structure's fold not being optimal and not an issue with the design algorithm, so far there is no way arround this (this is a limitation in Rosetta/PyRosetta).
-9. Generate fragments from the [Robetta server](http://robetta.org/) using this command:
+5. The computation takes around ~100 hours (fixbb) or ~300 hours (flxbb) depending on the protein's size and computer resources.
+6. The script will output around 100 structures and a score file *.fasc*.
+5. Use this [Rosetta Abinitio](https://github.com/sarisabban/RosettaAbinitio) script to predict the fold of the desgined structure.
+6. NOTE: Some backbones are very difficult to simulate their folds (*Abinitio*) before/after design becuase of a small energy gap between its fold and alternative folds using the same sequence, it is thus advised that you choose many structures and simulate them until you find a hit.
+7. Generate fragments from the [Robetta server](http://robetta.org/) using this command:
 
 `python3 Fragments.py FILENAME.pdb USERNAME`
 

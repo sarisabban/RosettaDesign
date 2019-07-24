@@ -9,12 +9,12 @@ import argparse
 from pyrosetta import *
 from pyrosetta.toolbox import *
 init('''
-	-ex1 -ex2
 	-out:level 0
-	-use_input_sc
 	-no_his_his_pairE
 	-extrachi_cutoff 1
 	-multi_cool_annealer 10
+	-ex1 -ex2
+	-use_input_sc
 	-score:weights design_hpatch.wts
 	''')
 
@@ -25,7 +25,7 @@ args = parser.parse_args()
 
 class RosettaDesign(object):
 	def __init__(self, filename):
-		''' Generate the resfile '''
+		''' Generate the resfile. '''
 		self.filename = filename
 		parser = Bio.PDB.PDBParser()
 		structure = parser.get_structure('{}'.format(filename), filename)
@@ -143,37 +143,95 @@ class RosettaDesign(object):
 				line = '{} A PIKAA PGNQSTDERKH\n'.format(n)
 				resfile.write(line)
 			elif s == 'S' and a == 'H':
-				line = '{} A PIKAA QEKH\n'.format(n)
+				line = '{} A PIKAA EHKQR\n'.format(n)
 				resfile.write(line)
 			elif s == 'S' and a == 'S':
-				line = '{} A PIKAA QTY\n'.format(n)
+				line = '{} A PIKAA DEGHKNPQRST\n'.format(n)
 				resfile.write(line)
 			elif s == 'B' and a == 'L':
-				line = '{} A PIKAA AVILFYWGNQSTPDEKR\n'.format(n)
+				line = '{} A PIKAA ADEFGHIKLMNPQRSTVWY\n'.format(n)
 				resfile.write(line)
 			elif s == 'B' and a == 'H':
-				line = '{} A PIKAA AVILWQEKFM\n'.format(n)
+				line = '{} A PIKAA ADEHIKLMNQRSTVWY\n'.format(n)
 				resfile.write(line)
 			elif s == 'B' and a == 'S':
-				line = '{} A PIKAA AVILFYWQTM\n'.format(n)
+				line = '{} A PIKAA DEFHIKLMNQRSTVWY\n'.format(n)
 				resfile.write(line)
 			elif s == 'C' and a == 'L':
-				line = '{} A PIKAA AVILPFWM\n'.format(n)
+				line = '{} A PIKAA AFGILMPVWY\n'.format(n)
 				resfile.write(line)
 			elif s == 'C' and a == 'H':
-				line = '{} A PIKAA AVILFWM\n'.format(n)
+				line = '{} A PIKAA AFILMVWY\n'.format(n)
 				resfile.write(line)
 			elif s == 'C' and a == 'S':
-				line = '{} A PIKAA AVILFWM\n'.format(n)
+				line = '{} A PIKAA FILMVWY\n'.format(n)
 				resfile.write(line)
 		resfile.close()
 		self.SASA = sasalist
+		# aa_composition file
+		with open('.comp', 'w')as comp:
+			comp.write("""
+PENALTY_DEFINITION
+PROPERTIES AROMATIC
+NOT_PROPERTIES POLAR CHARGED
+FRACTION 0.1
+PENALTIES 100 0 100
+DELTA_START -1
+DELTA_END 1
+BEFORE_FUNCTION CONSTANT
+AFTER_FUNCTION CONSTANT
+END_PENALTY_DEFINITION
+""")
+		# netcharge file
+		with open('.charge', 'w')as comp:
+			comp.write("""
+DESIRED_CHARGE 0
+PENALTIES_CHARGE_RANGE -1 1
+PENALTIES 10 0 10
+BEFORE_FUNCTION QUADRATIC
+AFTER_FUNCTION QUADRATIC
+""")
+		self.pose = pose_from_pdb(self.filename)
+		# pushback aa_composition
+		comp = pyrosetta.rosetta.protocols.aa_composition.AddCompositionConstraintMover()
+		comp.create_constraint_from_file('.comp')
+		comp.apply(self.pose)
+		# pushback netcharge
+		charge = pyrosetta.rosetta.protocols.aa_composition.AddNetChargeConstraintMover()
+		charge.create_constraint_from_file('.charge')
+		charge.apply(self.pose)
+		self.starting_pose = Pose()
+		self.starting_pose.assign(self.pose)
+		self.scorefxn = get_fa_scorefxn()
+		self.scorefxn_G = get_fa_scorefxn()
+		AAcomp		= pyrosetta.rosetta.core.scoring.ScoreType.aa_composition
+		NETq		= pyrosetta.rosetta.core.scoring.ScoreType.netcharge
+		AArep		= pyrosetta.rosetta.core.scoring.ScoreType.aa_repeat
+		ASPpen		= pyrosetta.rosetta.core.scoring.ScoreType.aspartimide_penalty
+		HBnet		= pyrosetta.rosetta.core.scoring.ScoreType.hbnet
+		MHCep		= pyrosetta.rosetta.core.scoring.ScoreType.mhc_epitope
+		VOIDpen		= pyrosetta.rosetta.core.scoring.ScoreType.voids_penalty
+		ABurUnsatPen= pyrosetta.rosetta.core.scoring.ScoreType.approximate_buried_unsat_penalty
+		BurUnsatPen	= pyrosetta.rosetta.core.scoring.ScoreType.buried_unsatisfied_penalty
+#		self.scorefxn_G.set_weight(AAcomp,		1.00) # Needs a file
+#		self.scorefxn_G.set_weight(NETq,		1.00) # Needs a file
+		self.scorefxn_G.set_weight(AArep,		1.00) # ?
+		self.scorefxn_G.set_weight(ASPpen,		0.10) # 1.0 is good
+		self.scorefxn_G.set_weight(HBnet,		1.00) # 1.0 - 10.0
+		self.scorefxn_G.set_weight(MHCep,		0.00) # Not needed
+		self.scorefxn_G.set_weight(VOIDpen,		0.50) # 0.05 - 1.0
+		self.scorefxn_G.set_weight(ABurUnsatPen,5.00) # Recomended
+		self.scorefxn_G.set_weight(BurUnsatPen,	0.75) # 0.0 - 1.0
+		self.relax = pyrosetta.rosetta.protocols.relax.FastRelax()
+		self.relax.set_scorefxn(self.scorefxn)
 	def __del__(self):
-		''' Remove the resfile '''
+		''' Remove the resfile. '''
 		os.remove('.resfile')
+		os.remove('.comp')
+		os.remove('.charge')
 		for f in glob.glob('f[il]xbb.fasc'): os.remove(f)
 	def choose(self):
-		''' Choose the lowest scoring structure '''
+		''' Choose the lowest scoring structure. '''
 		try:	scorefile = open('fixbb.fasc', 'r')
 		except:	scorefile = open('flxbb.fasc', 'r')
 		score = 0
@@ -190,39 +248,37 @@ class RosettaDesign(object):
 		'''
 		Performs the RosettaDesign protocol to change a structure's
 		amino acid sequence while maintaining a fixed backbone.
-		Generates the structure.pdb file
+		Generates the structure.pdb file.
 		'''
-		pose = pose_from_pdb(self.filename)
-		starting_pose = Pose()
-		starting_pose.assign(pose)
-		scorefxn = get_fa_scorefxn()
-		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
-		relax.set_scorefxn(scorefxn)
-		packtask = standard_packer_task(pose)
-		#pyrosetta.rosetta.core.pack.task.parse_resfile(pose, packtask, 'resfile')
-		fixbb = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(scorefxn, packtask, 10)
-		job = PyJobDistributor('fixbb', 100, scorefxn)
-		job.native_pose = starting_pose
+		#packtask = standard_packer_task(self.pose)
+		#pyrosetta.rosetta.core.pack.task.parse_resfile(self.pose, packtask, '.resfile')
+		#fixbb = pyrosetta.rosetta.protocols.minimization_packing.PackRotamersMover(self.scorefxn_G, packtask, 10)
+		resfile = pyrosetta.rosetta.core.pack.task.operation.ReadResfile('.resfile')
+		task = pyrosetta.rosetta.core.pack.task.TaskFactory()
+		task.push_back(resfile)
+		movemap = MoveMap()
+		movemap.set_bb(False)
+		movemap.set_chi(True)
+		fixbb = pyrosetta.rosetta.protocols.denovo_design.movers.FastDesign()
+		fixbb.set_task_factory(task)
+		fixbb.set_movemap(movemap)
+		fixbb.set_scorefxn(self.scorefxn_G)
+		self.relax.apply(self.pose)
+		job = PyJobDistributor('fixbb', 1, self.scorefxn)
+		job.native_pose = self.starting_pose
 		while not job.job_complete:
-			pose.assign(starting_pose)
-			relax.apply(pose)
-			fixbb.apply(pose)
-			relax.apply(pose)
-			job.output_decoy(pose)
-		self.choose()
+			self.pose.assign(self.starting_pose)
+			fixbb.apply(self.pose)
+			self.relax.apply(self.pose)
+			job.output_decoy(self.pose)
+		#self.choose()
 	def flxbb(self):
 		'''
 		Performs the RosettaDesign protocol to change a structure's
 		amino acid sequence while allowing for a flexible backbone.
-		Generates the structure.pdb file
+		Generates the structure.pdb file.
 		'''
-		pose = pose_from_pdb(self.filename)
-		starting_pose = Pose()
-		starting_pose.assign(pose)
-		scorefxn = get_fa_scorefxn()
-		relax = pyrosetta.rosetta.protocols.relax.FastRelax()
-		relax.set_scorefxn(scorefxn)
-		#resfile = rosetta.core.pack.task.operation.ReadResfile('resfile')
+		resfile = pyrosetta.rosetta.core.pack.task.operation.ReadResfile('.resfile')
 		task = pyrosetta.rosetta.core.pack.task.TaskFactory()
 		task.push_back(resfile)
 		movemap = MoveMap()
@@ -231,16 +287,16 @@ class RosettaDesign(object):
 		flxbb = pyrosetta.rosetta.protocols.denovo_design.movers.FastDesign()
 		flxbb.set_task_factory(task)
 		flxbb.set_movemap(movemap)
-		flxbb.set_scorefxn(scorefxn)
-		job = PyJobDistributor('flxbb', 100, scorefxn)
-		job.native_pose = starting_pose
+		flxbb.set_scorefxn(self.scorefxn_G)
+		self.relax.apply(self.pose)
+		job = PyJobDistributor('flxbb', 1, self.scorefxn)
+		job.native_pose = self.starting_pose
 		while not job.job_complete:
-			pose.assign(starting_pose)
-			relax.apply(pose)
-			flxbb.apply(pose)
-			relax.apply(pose)
-			job.output_decoy(pose)
-		self.choose()
+			self.pose.assign(self.starting_pose)
+			flxbb.apply(self.pose)
+			self.relax.apply(self.pose)
+			job.output_decoy(self.pose)
+		#self.choose()
 
 def main():
 	if args.fixbb:
