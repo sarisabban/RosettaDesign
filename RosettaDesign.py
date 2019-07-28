@@ -137,7 +137,7 @@ class RosettaDesign(object):
 			elif x[2] == 'S' or x[2] == 'T' or x[2] == '-':	ss = 'L'
 			sasalist.append((x[0], x[1], ss, sasa))
 		resfile = open('.resfile', 'a')
-		resfile.write('ALLAA\nEX 1\nEX 2\nUSE_INPUT_SC\nSTART\n')
+		resfile.write('NATRO\nEX 1\nEX 2\nUSE_INPUT_SC\nSTART\n')
 		for n, r, a, s in sasalist:
 			if s == 'S' and a == 'L':
 				line = '{} A PIKAA PGNQSTDERKH\n'.format(n)
@@ -261,7 +261,7 @@ AFTER_FUNCTION QUADRATIC
 		fixbb.set_movemap(movemap)
 		fixbb.set_scorefxn(self.scorefxn_G)
 		self.relax.apply(self.pose)
-		job = PyJobDistributor('fixbb', 100, self.scorefxn)
+		job = PyJobDistributor('fixbb', 5, self.scorefxn)
 		job.native_pose = self.starting_pose
 		while not job.job_complete:
 			self.pose.assign(self.starting_pose)
