@@ -137,7 +137,8 @@ class RosettaDesign(object):
 			elif x[2] == 'S' or x[2] == 'T' or x[2] == '-':	ss = 'L'
 			sasalist.append((x[0], x[1], ss, sasa))
 		resfile = open('.resfile', 'a')
-		resfile.write('NATRO\nEX 1\nEX 2\nUSE_INPUT_SC\nSTART\n')
+		#resfile.write('NATRO\nEX 1\nEX 2\nUSE_INPUT_SC\n')
+		resfile.write('START\n')
 		for n, r, a, s in sasalist:
 			if s == 'S' and a == 'L':
 				line = '{} A PIKAA PGNQSTDERKH\n'.format(n)
