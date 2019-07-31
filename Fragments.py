@@ -114,11 +114,11 @@ def Fragments(filename, username):
 	set label 'Average RMSD = {}' at graph 0.01 , graph 0.95 tc lt 7 font 'curior 12'\n
 	plot 'RMSDvsPosition.dat' with boxes\n
 	exit
-	""".format(str(Average_RMSD)))
+	""".format(str(round(Average_RMSD, 3))))
 	gnuplot.close()
 	os.system('gnuplot < gnuplot_sets')
 	os.remove('gnuplot_sets')
-	print('\u001b[34mAverage RMSD:\u001b[0m {}'.format(round(RMSD, 3)))
+	print('\u001b[34mAverage RMSD:\u001b[0m {}'.format(round(Average_RMSD, 3)))
 	return(Average_RMSD)
 
 RMSD = Fragments(sys.argv[1], sys.argv[2])
