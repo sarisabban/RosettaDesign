@@ -35,6 +35,44 @@ def Fragments(filename, username):
 			JobID = re.findall('<a href="(fragmentqueue.jsp\?id=[0-9].*)">', line)
 	JobURL = 'http://www.robetta.org/' + JobID[0]
 	ID = JobID[0].split('=')
+	URL = 'http://robetta.org/fragmentqueue.jsp'
+	page = urllib.request.urlopen(URL)
+	data = bs4.BeautifulSoup(page, 'lxml')
+	table = data.find('table', {'cellpadding':'3'})
+	info = table.findAll('tr')
+	print('''\u001b[32m{}
+________      ______      __________
+___  __ \________  /________  /__  /______ _
+__  /_/ /  __ \_  __ \  _ \  __/  __/  __ `/
+_  _, _// /_/ /  /_/ /  __/ /_ / /_ / /_/ /
+/_/ |_| \____//_.___/\___/\__/ \__/ \__,_/
+
+\u001b[34mRobetta.org Protein Structure Prediction Server\u001b[0m
+'''.format('-'*57))
+	print('\u001b[35m|JobID | Status | Length | User\u001b[0m')
+	print('\u001b[33m-------------------------------------\u001b[0m')
+	for item in info:
+		try:
+			job =      item.findAll('td')[0].findAll('a')[0].getText()
+			status =   item.findAll('td')[1].getText()
+			username = item.findAll('td')[3].getText()
+			length =   item.findAll('td')[4].getText()
+			target =   item.findAll('td')[5].getText()
+		except: continue
+		j = '\u001b[36m{}\u001b[33m'.format(job)
+		s = '\u001b[36m{}\u001b[33m'.format(status)
+		n = '\u001b[36m{}\u001b[33m'.format(username)
+		l = '\u001b[36m{}\u001b[33m'.format(length)
+		t = '\u001b[36m{}\u001b[33m'.format(target)
+		if status == 'Queued':
+			s =   '\u001b[31m{}\u001b[33m'.format(status)
+			TBL = '\u001b[32m|{} |{}  | {}\t | {}\u001b[0m'.format(j, s, l, n)
+		elif status == 'Active':
+			s =   '\u001b[32m{}\u001b[33m'.format(status)
+			TBL = '\u001b[33m|{} |{}  | {}\t | {}\u001b[0m'.format(j, s, l, n)
+		else:
+			TBL = '\u001b[33m|{} |{}| {}\t | {}\u001b[0m'.format(j, s, l, n)
+		print(TBL)
 	print('Fragments submitted to Robetta server [http://robetta.org/fragmentqueue.jsp]')
 	print('Job ID: \u001b[32m{}\u001b[0m'.format(str(ID[1])))
 	while True:
@@ -56,9 +94,12 @@ def Fragments(filename, username):
 	fasta.write(sequence)
 	fasta.close()
 	time.sleep(1)
-	os.system('wget http://www.robetta.org/downloads/fragments/'+str(ID[1])+'/aat000_03_05.200_v1_3')
-	os.system('wget http://www.robetta.org/downloads/fragments/'+str(ID[1])+'/aat000_09_05.200_v1_3')
-	os.system('wget http://www.robetta.org/downloads/fragments/'+str(ID[1])+'/t000_.psipred_ss2')
+	os.system('wget -q http://www.robetta.org/downloads/fragments/'+str(ID[1])+'/aat000_03_05.200_v1_3')
+	print('Downloading 3mer fragment file ...')
+	os.system('wget -q http://www.robetta.org/downloads/fragments/'+str(ID[1])+'/aat000_09_05.200_v1_3')
+	print('Downloading 9mer fragment file ...')
+	os.system('wget -q http://www.robetta.org/downloads/fragments/'+str(ID[1])+'/t000_.psipred_ss2')
+	print('Downloading PSIPRED file ...')
 	os.rename('aat000_03_05.200_v1_3', 'frags.200.3mers')
 	os.rename('aat000_09_05.200_v1_3', 'frags.200.9mers')
 	os.rename('t000_.psipred_ss2', 'pre.psipred.ss2')
