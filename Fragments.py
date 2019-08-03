@@ -26,16 +26,16 @@ def Fragments(filename, username):
 	pose = pose_from_pdb(filename)
 	sequence = pose.sequence()
 	web = requests.get('http://www.robetta.org/fragmentsubmit.jsp')
-	payload = {	'UserName':				username,
-				'Email':				'',
-				'Notes':				'{}'.format(filename.split('.')[0]),
-				'Sequence':				sequence,
-				'Fasta':				'',
-				'Code':					'',
-				'ChemicalShifts':		'',
-				'NoeConstraints':		'',
-				'DipolarConstraints':	'',
-				'type':					'submit'}
+	payload = {	'UserName':          username,
+				'Email':             '',
+				'Notes':             '{}'.format(filename.split('.')[0]),
+				'Sequence':          sequence,
+				'Fasta':             '',
+				'Code':              '',
+				'ChemicalShifts':    '',
+				'NoeConstraints':    '',
+				'DipolarConstraints':'',
+				'type':              'submit'}
 	session = requests.session()
 	response = session.post('http://www.robetta.org/fragmentsubmit.jsp', data=payload, files=dict(foo='bar'))
 	for line in response:
