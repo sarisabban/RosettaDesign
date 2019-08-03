@@ -24,7 +24,7 @@ args = parser.parse_args()
 
 class RosettaDesign(object):
 	def __init__(self, filename):
-		''' Generate the resfile. '''
+		''' Generate the required files and sets up the weights. '''
 		AminoAcid = {	'A':129, 'P':159, 'N':195, 'H':224,
 						'V':174, 'Y':263, 'C':167, 'K':236,
 						'I':197, 'F':240, 'Q':225, 'S':155,
