@@ -15,7 +15,6 @@ init('''
 	-multi_cool_annealer 10
 	-ex1 -ex2
 	-use_input_sc
-	-score:weights design_hpatch.wts
 	''')
 
 parser = argparse.ArgumentParser(description='RosettaDesign')
@@ -214,15 +213,15 @@ AFTER_FUNCTION QUADRATIC
 		VOIDpen		= pyrosetta.rosetta.core.scoring.ScoreType.voids_penalty
 		ABurUnsatPen= pyrosetta.rosetta.core.scoring.ScoreType.approximate_buried_unsat_penalty
 		BurUnsatPen	= pyrosetta.rosetta.core.scoring.ScoreType.buried_unsatisfied_penalty
-#		self.scorefxn_G.set_weight(AAcomp,		1.00) # Needs a file
-#		self.scorefxn_G.set_weight(NETq,		1.00) # Needs a file
-		self.scorefxn_G.set_weight(AArep,		1.00) # ?
-		self.scorefxn_G.set_weight(ASPpen,		0.10) # 1.0 is good
-		self.scorefxn_G.set_weight(HBnet,		1.00) # 1.0 - 10.0
-		self.scorefxn_G.set_weight(MHCep,		0.00) # Not needed
-		self.scorefxn_G.set_weight(VOIDpen,		0.50) # 0.05 - 1.0
-		self.scorefxn_G.set_weight(ABurUnsatPen,5.00) # Recomended
-		self.scorefxn_G.set_weight(BurUnsatPen,	0.75) # 0.0 - 1.0
+#		self.scorefxn_G.set_weight(AAcomp,		1.00)
+#		self.scorefxn_G.set_weight(NETq,		1.00)
+#		self.scorefxn_G.set_weight(HBnet,		1.00)
+#		self.scorefxn_G.set_weight(VOIDpen,		0.10)
+		self.scorefxn_G.set_weight(AArep,		1.00)
+		self.scorefxn_G.set_weight(ASPpen,		1.00)
+		self.scorefxn_G.set_weight(MHCep,		0.00)
+		self.scorefxn_G.set_weight(BurUnsatPen,	1.00)
+		self.scorefxn_G.set_weight(ABurUnsatPen,5.00)
 		self.relax = pyrosetta.rosetta.protocols.relax.FastRelax()
 		self.relax.set_scorefxn(self.scorefxn)
 	def __del__(self):
