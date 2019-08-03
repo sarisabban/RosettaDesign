@@ -25,116 +25,25 @@ args = parser.parse_args()
 class RosettaDesign(object):
 	def __init__(self, filename):
 		''' Generate the resfile. '''
+		AminoAcid = {	'A':129, 'P':159, 'N':195, 'H':224,
+						'V':174, 'Y':263, 'C':167, 'K':236,
+						'I':197, 'F':240, 'Q':225, 'S':155,
+						'L':201, 'W':285, 'E':223, 'T':172,
+						'M':224, 'R':274, 'G':104, 'D':193}
 		self.filename = filename
 		parser = Bio.PDB.PDBParser()
 		structure = parser.get_structure('{}'.format(filename), filename)
 		dssp = Bio.PDB.DSSP(structure[0], filename, acc_array='Wilke')
 		sasalist = []
-		for x in dssp:
-			if x[1] == 'A':
-				sasa = 129*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'V':
-				sasa = 174*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'I':
-				sasa = 197*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'L':
-				sasa = 201*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'M':
-				sasa = 224*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'P':
-				sasa = 159*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'Y':
-				sasa = 263*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'F':
-				sasa = 240*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'W':
-				sasa = 285*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'R':
-				sasa = 274*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'N':
-				sasa = 195*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'C':
-				sasa = 167*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'Q':
-				sasa = 225*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'E':
-				sasa = 223*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'G':
-				sasa = 104*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'H':
-				sasa = 224*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'K':
-				sasa = 236*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'S':
-				sasa = 155*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'T':
-				sasa = 172*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			elif x[1] == 'D':
-				sasa = 193*(x[3])
-				if sasa <= 25:			sasa = 'C'
-				elif 25 < sasa < 40:	sasa = 'B'
-				elif sasa >= 40:		sasa = 'S'
-			if x[2] == 'G' or x[2] == 'H' or x[2] == 'I':	ss = 'H'
-			elif x[2] == 'B' or x[2] == 'E':				ss = 'S'
-			elif x[2] == 'S' or x[2] == 'T' or x[2] == '-':	ss = 'L'
-			sasalist.append((x[0], x[1], ss, sasa))
+		for aa in dssp:
+			sasa = AminoAcid[aa[1]]*aa[3]
+			if sasa <= 25:		sasa = 'C'
+			elif 25 < sasa < 40:sasa = 'B'
+			elif sasa >= 40:	sasa = 'S'
+			if aa[2] == 'G' or aa[2] == 'H' or aa[2] == 'I':	ss = 'H'
+			elif aa[2] == 'B' or aa[2] == 'E':					ss = 'S'
+			elif aa[2] == 'S' or aa[2] == 'T' or aa[2] == '-':	ss = 'L'
+			sasalist.append((aa[0], aa[1], ss, sasa))
 		resfile = open('.resfile', 'a')
 		#resfile.write('NATRO\nEX 1\nEX 2\nUSE_INPUT_SC\n')
 		resfile.write('START\n')
