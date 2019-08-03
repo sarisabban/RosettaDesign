@@ -37,69 +37,52 @@ class RosettaDesign(object):
 		sasalist = []
 		for aa in dssp:
 			sasa = AminoAcid[aa[1]]*aa[3]
-			if sasa <= 25:		sasa = 'C'
+			if sasa <= 25:      sasa = 'C'
 			elif 25 < sasa < 40:sasa = 'B'
-			elif sasa >= 40:	sasa = 'S'
-			if aa[2] == 'G' or aa[2] == 'H' or aa[2] == 'I':	ss = 'H'
-			elif aa[2] == 'B' or aa[2] == 'E':					ss = 'S'
-			elif aa[2] == 'S' or aa[2] == 'T' or aa[2] == '-':	ss = 'L'
+			elif sasa >= 40:    sasa = 'S'
+			if aa[2] == 'G' or aa[2] == 'H' or aa[2] == 'I':   ss = 'H'
+			elif aa[2] == 'B' or aa[2] == 'E':                 ss = 'S'
+			elif aa[2] == 'S' or aa[2] == 'T' or aa[2] == '-': ss = 'L'
 			sasalist.append((aa[0], aa[1], ss, sasa))
 		resfile = open('.resfile', 'a')
 		#resfile.write('NATRO\nEX 1\nEX 2\nUSE_INPUT_SC\n')
 		resfile.write('START\n')
 		for n, r, a, s in sasalist:
-			if s == 'S' and a == 'L':
-				line = '{} A PIKAA PGNQSTDERKH\n'.format(n)
-				resfile.write(line)
-			elif s == 'S' and a == 'H':
-				line = '{} A PIKAA EHKQR\n'.format(n)
-				resfile.write(line)
-			elif s == 'S' and a == 'S':
-				line = '{} A PIKAA DEGHKNPQRST\n'.format(n)
-				resfile.write(line)
-			elif s == 'B' and a == 'L':
-				line = '{} A PIKAA ADEFGHIKLMNPQRSTVWY\n'.format(n)
-				resfile.write(line)
-			elif s == 'B' and a == 'H':
-				line = '{} A PIKAA ADEHIKLMNQRSTVWY\n'.format(n)
-				resfile.write(line)
-			elif s == 'B' and a == 'S':
-				line = '{} A PIKAA DEFHIKLMNQRSTVWY\n'.format(n)
-				resfile.write(line)
-			elif s == 'C' and a == 'L':
-				line = '{} A PIKAA AFGILMPVWY\n'.format(n)
-				resfile.write(line)
-			elif s == 'C' and a == 'H':
-				line = '{} A PIKAA AFILMVWY\n'.format(n)
-				resfile.write(line)
-			elif s == 'C' and a == 'S':
-				line = '{} A PIKAA FILMVWY\n'.format(n)
-				resfile.write(line)
+			if s == 'S' and a == 'L':   line = '{} A PIKAA PGNQSTDERKH\n'.format(n)
+			elif s == 'S' and a == 'H': line = '{} A PIKAA EHKQR\n'.format(n)
+			elif s == 'S' and a == 'S': line = '{} A PIKAA DEGHKNPQRST\n'.format(n)
+			elif s == 'B' and a == 'L': line = '{} A PIKAA ADEFGHIKLMNPQRSTVWY\n'.format(n)
+			elif s == 'B' and a == 'H': line = '{} A PIKAA ADEHIKLMNQRSTVWY\n'.format(n)
+			elif s == 'B' and a == 'S': line = '{} A PIKAA DEFHIKLMNQRSTVWY\n'.format(n)
+			elif s == 'C' and a == 'L': line = '{} A PIKAA AFGILMPVWY\n'.format(n)
+			elif s == 'C' and a == 'H': line = '{} A PIKAA AFILMVWY\n'.format(n)
+			elif s == 'C' and a == 'S': line = '{} A PIKAA FILMVWY\n'.format(n)
+			resfile.write(line)
 		resfile.close()
 		self.SASA = sasalist
 		# aa_composition file
 		with open('.comp', 'w')as comp:
 			comp.write("""
-PENALTY_DEFINITION
-PROPERTIES AROMATIC
-NOT_PROPERTIES POLAR CHARGED
-FRACTION 0.1
-PENALTIES 100 0 100
-DELTA_START -1
-DELTA_END 1
-BEFORE_FUNCTION CONSTANT
-AFTER_FUNCTION CONSTANT
-END_PENALTY_DEFINITION
-""")
+				PENALTY_DEFINITION
+				PROPERTIES AROMATIC
+				NOT_PROPERTIES POLAR CHARGED
+				FRACTION 0.1
+				PENALTIES 100 0 100
+				DELTA_START -1
+				DELTA_END 1
+				BEFORE_FUNCTION CONSTANT
+				AFTER_FUNCTION CONSTANT
+				END_PENALTY_DEFINITION
+				""")
 		# netcharge file
 		with open('.charge', 'w')as comp:
 			comp.write("""
-DESIRED_CHARGE 0
-PENALTIES_CHARGE_RANGE -1 1
-PENALTIES 10 0 10
-BEFORE_FUNCTION QUADRATIC
-AFTER_FUNCTION QUADRATIC
-""")
+				DESIRED_CHARGE 0
+				PENALTIES_CHARGE_RANGE -1 1
+				PENALTIES 10 0 10
+				BEFORE_FUNCTION QUADRATIC
+				AFTER_FUNCTION QUADRATIC
+				""")
 		self.pose = pose_from_pdb(self.filename)
 		# pushback aa_composition
 		comp = pyrosetta.rosetta.protocols.aa_composition.AddCompositionConstraintMover()
@@ -113,23 +96,23 @@ AFTER_FUNCTION QUADRATIC
 		self.starting_pose.assign(self.pose)
 		self.scorefxn = get_fa_scorefxn()
 		self.scorefxn_G = get_fa_scorefxn()
-		AAcomp		= pyrosetta.rosetta.core.scoring.ScoreType.aa_composition
-		NETq		= pyrosetta.rosetta.core.scoring.ScoreType.netcharge
-		AArep		= pyrosetta.rosetta.core.scoring.ScoreType.aa_repeat
-		ASPpen		= pyrosetta.rosetta.core.scoring.ScoreType.aspartimide_penalty
-		HBnet		= pyrosetta.rosetta.core.scoring.ScoreType.hbnet
-		MHCep		= pyrosetta.rosetta.core.scoring.ScoreType.mhc_epitope
-		VOIDpen		= pyrosetta.rosetta.core.scoring.ScoreType.voids_penalty
+		AAcomp      = pyrosetta.rosetta.core.scoring.ScoreType.aa_composition
+		NETq        = pyrosetta.rosetta.core.scoring.ScoreType.netcharge
+		AArep       = pyrosetta.rosetta.core.scoring.ScoreType.aa_repeat
+		ASPpen      = pyrosetta.rosetta.core.scoring.ScoreType.aspartimide_penalty
+		HBnet       = pyrosetta.rosetta.core.scoring.ScoreType.hbnet
+		MHCep       = pyrosetta.rosetta.core.scoring.ScoreType.mhc_epitope
+		VOIDpen     = pyrosetta.rosetta.core.scoring.ScoreType.voids_penalty
 		ABurUnsatPen= pyrosetta.rosetta.core.scoring.ScoreType.approximate_buried_unsat_penalty
-		BurUnsatPen	= pyrosetta.rosetta.core.scoring.ScoreType.buried_unsatisfied_penalty
-#		self.scorefxn_G.set_weight(AAcomp,		1.00)
-#		self.scorefxn_G.set_weight(NETq,		1.00)
-#		self.scorefxn_G.set_weight(HBnet,		1.00)
-#		self.scorefxn_G.set_weight(VOIDpen,		0.10)
-		self.scorefxn_G.set_weight(AArep,		1.00)
-		self.scorefxn_G.set_weight(ASPpen,		1.00)
-		self.scorefxn_G.set_weight(MHCep,		0.00)
-		self.scorefxn_G.set_weight(BurUnsatPen,	1.00)
+		BurUnsatPen = pyrosetta.rosetta.core.scoring.ScoreType.buried_unsatisfied_penalty
+		#self.scorefxn_G.set_weight(AAcomp,      1.00)
+		#self.scorefxn_G.set_weight(NETq,        1.00)
+		#self.scorefxn_G.set_weight(HBnet,       1.00)
+		#self.scorefxn_G.set_weight(VOIDpen,     0.10)
+		self.scorefxn_G.set_weight(AArep,       1.00)
+		self.scorefxn_G.set_weight(ASPpen,      1.00)
+		self.scorefxn_G.set_weight(MHCep,       0.00)
+		self.scorefxn_G.set_weight(BurUnsatPen, 1.00)
 		self.scorefxn_G.set_weight(ABurUnsatPen,5.00)
 		self.relax = pyrosetta.rosetta.protocols.relax.FastRelax()
 		self.relax.set_scorefxn(self.scorefxn)
@@ -170,7 +153,7 @@ AFTER_FUNCTION QUADRATIC
 		fixbb.set_movemap(movemap)
 		fixbb.set_scorefxn(self.scorefxn_G)
 		self.relax.apply(self.pose)
-		job = PyJobDistributor('fixbb', 5, self.scorefxn)
+		job = PyJobDistributor('fixbb', 100, self.scorefxn)
 		job.native_pose = self.starting_pose
 		while not job.job_complete:
 			self.pose.assign(self.starting_pose)
